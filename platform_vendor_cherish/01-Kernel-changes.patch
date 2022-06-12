@@ -1,0 +1,75 @@
+From d881f880dd3cee64fe7dafa6c82ed32908f77060 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Wed, 27 Apr 2022 03:33:11 +0000
+Subject: [PATCH] Kernel Related Changes
+
+---
+ build/soong/Android.bp | 12 ------------
+ build/tasks/kernel.mk  |  2 ++
+ config/common.mk       |  2 ++
+ 3 files changed, 4 insertions(+), 12 deletions(-)
+
+diff --git a/build/soong/Android.bp b/build/soong/Android.bp
+index b26c94ec..ff24fd08 100644
+--- a/build/soong/Android.bp
++++ b/build/soong/Android.bp
+@@ -20,9 +20,6 @@ bootstrap_go_package {
+ cherish_generator {
+     name: "generated_kernel_includes",
+ 
+-    // The headers make command
+-    cmd: "$(PATH_OVERRIDE_SOONG) $(KERNEL_MAKE_CMD) $(KERNEL_MAKE_FLAGS) -C $(TARGET_KERNEL_HEADERS) O=$(KERNEL_BUILD_OUT_PREFIX)$(genDir) ARCH=$(KERNEL_ARCH) $(KERNEL_CROSS_COMPILE) headers_install",
+-
+     // Directories that can be imported by a cc_* module generated_headers property
+     export_include_dirs: [
+         "usr/audio/include/uapi",
+@@ -31,15 +28,6 @@ cherish_generator {
+         "usr/include/audio/include/uapi",
+         "usr/techpack/audio/include",
+     ],
+-
+-    // Sources for dependency tracking
+-    dep_root: "$(TARGET_KERNEL_HEADERS)",
+-    dep_files: [
+-        "Makefile",
+-        "include/**/*",
+-        "arch/$(KERNEL_ARCH)/include/**/*",
+-        "techpack/audio/include/**/*",
+-    ],
+ }
+ 
+ cc_library_headers {
+diff --git a/build/tasks/kernel.mk b/build/tasks/kernel.mk
+index ef5c6874..875e5b5e 100644
+--- a/build/tasks/kernel.mk
++++ b/build/tasks/kernel.mk
+@@ -69,6 +69,7 @@
+ #                                          modules in vendor_overlay instead of vendor
+ 
+ ifneq ($(TARGET_NO_KERNEL),true)
++ifneq ($(TARGET_NO_KERNEL_OVERRIDE),true)
+ 
+ ## Externally influenced variables
+ KERNEL_SRC := $(TARGET_KERNEL_SOURCE)
+@@ -569,4 +570,5 @@ dtboimage: $(INSTALLED_DTBOIMAGE_TARGET)
+ .PHONY: dtbimage
+ dtbimage: $(INSTALLED_DTBIMAGE_TARGET)
+ 
++endif # TARGET_NO_KERNEL_OVERRIDE
+ endif # TARGET_NO_KERNEL
+diff --git a/config/common.mk b/config/common.mk
+index 365219e6..a6c1638f 100644
+--- a/config/common.mk
++++ b/config/common.mk
+@@ -3,6 +3,8 @@ $(call inherit-product, vendor/cherish/config/main_version.mk)
+ 
+ PRODUCT_BRAND ?= CherishOS
+ 
++TARGET_NO_KERNEL_OVERRIDE := true
++
+ PRODUCT_BUILD_PROP_OVERRIDES += BUILD_UTC_DATE=0
+ 
+ ifeq ($(PRODUCT_GMS_CLIENTID_BASE),)
+-- 
+2.17.0
+

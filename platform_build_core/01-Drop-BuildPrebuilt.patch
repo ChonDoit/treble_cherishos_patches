@@ -1,0 +1,26 @@
+From a656cfdc4afeb5726a41fc1b2d4b13db3a635853 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Sun, 13 Feb 2022 14:52:46 +0000
+Subject: [PATCH] drop BuildPrebuilt instead
+
+---
+ core/Makefile | 3 ---
+ 1 file changed, 3 deletions(-)
+
+diff --git a/core/Makefile b/core/Makefile
+index fd218e27a..0c78d89d1 100644
+--- a/core/Makefile
++++ b/core/Makefile
+@@ -14,9 +14,6 @@ LOCAL_PATH := $(BUILD_SYSTEM)
+ #$(1): the src:dest pair
+ #$(2): the dest
+ define check-product-copy-files
+-$(if $(filter-out $(TARGET_COPY_OUT_SYSTEM_OTHER)/%,$(2)), \
+-  $(if $(filter %.apk, $(2)),$(error \
+-     Prebuilt apk found in PRODUCT_COPY_FILES: $(1), use BUILD_PREBUILT instead!))) \
+ $(if $(filter true,$(BUILD_BROKEN_VINTF_PRODUCT_COPY_FILES)),, \
+   $(if $(filter $(TARGET_COPY_OUT_SYSTEM)/etc/vintf/% \
+                 $(TARGET_COPY_OUT_SYSTEM)/manifest.xml \
+-- 
+2.17.1
+

@@ -1,0 +1,290 @@
+From dec055ceac53c31ff756bb24331741e9a9bb0d95 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Wed, 27 Apr 2022 03:09:00 +0000
+Subject: [PATCH 1/3] Revert "InputDispatcher: allow to intercept a specific
+ event key"
+
+This reverts commit 33dfe0374ce3c1b7674a43ba71d157ff2952ef10.
+---
+ services/inputflinger/dispatcher/Android.bp          | 1 -
+ services/inputflinger/dispatcher/InputDispatcher.cpp | 8 --------
+ 2 files changed, 9 deletions(-)
+
+diff --git a/services/inputflinger/dispatcher/Android.bp b/services/inputflinger/dispatcher/Android.bp
+index 7234ecdbe2..171f2b5ce8 100644
+--- a/services/inputflinger/dispatcher/Android.bp
++++ b/services/inputflinger/dispatcher/Android.bp
+@@ -83,7 +83,6 @@ cc_library_static {
+     defaults: [
+         "inputflinger_defaults",
+         "libinputdispatcher_defaults",
+-        "inputdispatcher_skip_event_key_defaults",
+     ],
+     shared_libs: [
+         // This should consist only of dependencies from inputflinger. Other dependencies should be
+diff --git a/services/inputflinger/dispatcher/InputDispatcher.cpp b/services/inputflinger/dispatcher/InputDispatcher.cpp
+index 69f9e927bb..6a9425d254 100644
+--- a/services/inputflinger/dispatcher/InputDispatcher.cpp
++++ b/services/inputflinger/dispatcher/InputDispatcher.cpp
+@@ -1449,14 +1449,6 @@ bool InputDispatcher::dispatchKeyLocked(nsecs_t currentTime, std::shared_ptr<Key
+     // Give the policy a chance to intercept the key.
+     if (entry->interceptKeyResult == KeyEntry::INTERCEPT_KEY_RESULT_UNKNOWN) {
+         if (entry->policyFlags & POLICY_FLAG_PASS_TO_USER) {
+-            if (INPUTDISPATCHER_SKIP_EVENT_KEY != 0) {
+-                if(entry->keyCode == 0 && entry->scanCode == INPUTDISPATCHER_SKIP_EVENT_KEY) {
+-                    entry->interceptKeyResult = KeyEntry::INTERCEPT_KEY_RESULT_SKIP;
+-                    *dropReason = DropReason::POLICY;
+-                    ALOGI("Intercepted the key %i", INPUTDISPATCHER_SKIP_EVENT_KEY);
+-                    return true;
+-                }
+-            }
+             std::unique_ptr<CommandEntry> commandEntry = std::make_unique<CommandEntry>(
+                     &InputDispatcher::doInterceptKeyBeforeDispatchingLockedInterruptible);
+             sp<IBinder> focusedWindowToken =
+-- 
+2.17.0
+
+
+From f9d6cb9b2fe2633aaf549e06d67c40e38adedd7b Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Wed, 27 Apr 2022 03:09:13 +0000
+Subject: [PATCH 2/3] Revert "CompositionEngine: Request device composition for
+ the Udfps touched layer"
+
+This reverts commit f1c2c21992f02f01c28b9f447a8eac6cb1a3728b.
+---
+ .../CompositionEngine/src/Output.cpp              | 15 +--------------
+ 1 file changed, 1 insertion(+), 14 deletions(-)
+
+diff --git a/services/surfaceflinger/CompositionEngine/src/Output.cpp b/services/surfaceflinger/CompositionEngine/src/Output.cpp
+index 80e7f044fd..95ae5e514e 100644
+--- a/services/surfaceflinger/CompositionEngine/src/Output.cpp
++++ b/services/surfaceflinger/CompositionEngine/src/Output.cpp
+@@ -22,7 +22,6 @@
+ #include <compositionengine/LayerFE.h>
+ #include <compositionengine/LayerFECompositionState.h>
+ #include <compositionengine/RenderSurface.h>
+-#include <compositionengine/UdfpsExtension.h>
+ #include <compositionengine/impl/Output.h>
+ #include <compositionengine/impl/OutputCompositionState.h>
+ #include <compositionengine/impl/OutputLayer.h>
+@@ -782,10 +781,7 @@ void Output::writeCompositionState(const compositionengine::CompositionRefreshAr
+ 
+ compositionengine::OutputLayer* Output::findLayerRequestingBackgroundComposition() const {
+     compositionengine::OutputLayer* layerRequestingBgComposition = nullptr;
+-    for (size_t i = 0; i < getOutputLayerCount(); i++) {
+-        compositionengine::OutputLayer* layer = getOutputLayerOrderedByZByIndex(i);
+-        compositionengine::OutputLayer* nextLayer = getOutputLayerOrderedByZByIndex(i + 1);
+-
++    for (auto* layer : getOutputLayersOrderedByZ()) {
+         auto* compState = layer->getLayerFE().getCompositionState();
+ 
+         // If any layer has a sideband stream, we will disable blurs. In that case, we don't
+@@ -799,15 +795,6 @@ compositionengine::OutputLayer* Output::findLayerRequestingBackgroundComposition
+         if (compState->backgroundBlurRadius > 0 || compState->blurRegions.size() > 0) {
+             layerRequestingBgComposition = layer;
+         }
+-
+-        // If the next layer is the Udfps touched layer, enable client composition for it
+-        // because that somehow leads to the Udfps touched layer getting device composition
+-        // consistently.
+-        if ((nextLayer != nullptr && layerRequestingBgComposition == nullptr) &&
+-                (strcmp(nextLayer->getLayerFE().getDebugName(), UDFPS_TOUCHED_LAYER_NAME) == 0)) {
+-            layerRequestingBgComposition = layer;
+-            break;
+-        }
+     }
+     return layerRequestingBgComposition;
+ }
+-- 
+2.17.0
+
+
+From bba196b831aff5d1effbec49da1bc7dabbff3723 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Wed, 27 Apr 2022 03:09:25 +0000
+Subject: [PATCH 3/3] Revert "surfaceflinger: Add support for Udfps extension
+ lib"
+
+This reverts commit 080bf5c9610eed102eb0a84568efcd5105548473.
+---
+ services/surfaceflinger/BufferQueueLayer.cpp  | 10 +------
+ .../CompositionEngine/Android.bp              | 14 +--------
+ .../compositionengine/UdfpsExtension.h        | 29 -------------------
+ .../CompositionEngine/src/OutputLayer.cpp     | 12 +-------
+ .../CompositionEngine/src/UdfpsExtension.cpp  | 27 -----------------
+ 5 files changed, 3 insertions(+), 89 deletions(-)
+ delete mode 100644 services/surfaceflinger/CompositionEngine/include/compositionengine/UdfpsExtension.h
+ delete mode 100644 services/surfaceflinger/CompositionEngine/src/UdfpsExtension.cpp
+
+diff --git a/services/surfaceflinger/BufferQueueLayer.cpp b/services/surfaceflinger/BufferQueueLayer.cpp
+index 8c404aca3a..99e470dfe6 100644
+--- a/services/surfaceflinger/BufferQueueLayer.cpp
++++ b/services/surfaceflinger/BufferQueueLayer.cpp
+@@ -25,7 +25,6 @@
+ #include "BufferQueueLayer.h"
+ 
+ #include <compositionengine/LayerFECompositionState.h>
+-#include <compositionengine/UdfpsExtension.h>
+ #include <gui/BufferQueueConsumer.h>
+ #include <system/window.h>
+ 
+@@ -522,17 +521,10 @@ status_t BufferQueueLayer::setDefaultBufferProperties(uint32_t w, uint32_t h, Pi
+         ALOGE("dimensions too large %" PRIu32 " x %" PRIu32, w, h);
+         return BAD_VALUE;
+     }
+-    uint64_t usageBits = getEffectiveUsage(0);
+-
+-    if (mName == UDFPS_LAYER_NAME || mName == UDFPS_BIOMETRIC_PROMPT_LAYER_NAME) {
+-        usageBits = getUdfpsUsageBits(usageBits, false);
+-    } else if (mName == UDFPS_TOUCHED_LAYER_NAME) {
+-        usageBits = getUdfpsUsageBits(usageBits, true);
+-    }
+ 
+     setDefaultBufferSize(w, h);
+     mConsumer->setDefaultBufferFormat(format);
+-    mConsumer->setConsumerUsageBits(usageBits);
++    mConsumer->setConsumerUsageBits(getEffectiveUsage(0));
+ 
+     return NO_ERROR;
+ }
+diff --git a/services/surfaceflinger/CompositionEngine/Android.bp b/services/surfaceflinger/CompositionEngine/Android.bp
+index d9599e2f29..d738ccdb90 100644
+--- a/services/surfaceflinger/CompositionEngine/Android.bp
++++ b/services/surfaceflinger/CompositionEngine/Android.bp
+@@ -50,10 +50,7 @@ cc_defaults {
+ 
+ cc_library {
+     name: "libcompositionengine",
+-    defaults: [
+-        "libcompositionengine_defaults",
+-        "surfaceflinger_udfps_lib_defaults",
+-    ],
++    defaults: ["libcompositionengine_defaults"],
+     srcs: [
+         "src/planner/CachedSet.cpp",
+         "src/planner/Flattener.cpp",
+@@ -74,7 +71,6 @@ cc_library {
+         "src/OutputLayer.cpp",
+         "src/OutputLayerCompositionState.cpp",
+         "src/RenderSurface.cpp",
+-        "src/UdfpsExtension.cpp",
+     ],
+     local_include_dirs: ["include"],
+     export_include_dirs: ["include"],
+@@ -103,14 +99,6 @@ cc_library {
+     export_include_dirs: ["include"],
+ }
+ 
+-cc_library_static {
+-    name: "surfaceflinger_udfps_lib",
+-    srcs: [
+-        "src/UdfpsExtension.cpp",
+-    ],
+-    export_include_dirs: ["include"],
+-}
+-
+ cc_test {
+     name: "libcompositionengine_test",
+     test_suites: ["device-tests"],
+diff --git a/services/surfaceflinger/CompositionEngine/include/compositionengine/UdfpsExtension.h b/services/surfaceflinger/CompositionEngine/include/compositionengine/UdfpsExtension.h
+deleted file mode 100644
+index ae688d4c30..0000000000
+--- a/services/surfaceflinger/CompositionEngine/include/compositionengine/UdfpsExtension.h
++++ /dev/null
+@@ -1,29 +0,0 @@
+-/*
+- * Copyright 2021 The LineageOS Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-#include <stdint.h>
+-
+-#ifndef __UDFPS_EXTENSION__H__
+-#define __UDFPS_EXTENSION__H__
+-
+-#define UDFPS_BIOMETRIC_PROMPT_LAYER_NAME "BiometricPrompt#0"
+-#define UDFPS_LAYER_NAME "UdfpsController#0"
+-#define UDFPS_TOUCHED_LAYER_NAME "SurfaceView[UdfpsController](BLAST)#0"
+-
+-extern uint32_t getUdfpsZOrder(uint32_t z, bool touched);
+-extern uint64_t getUdfpsUsageBits(uint64_t usageBits, bool touched);
+-
+-#endif /* __UDFPS_EXTENSION__H__ */
+diff --git a/services/surfaceflinger/CompositionEngine/src/OutputLayer.cpp b/services/surfaceflinger/CompositionEngine/src/OutputLayer.cpp
+index 87be750569..56e9d27f14 100644
+--- a/services/surfaceflinger/CompositionEngine/src/OutputLayer.cpp
++++ b/services/surfaceflinger/CompositionEngine/src/OutputLayer.cpp
+@@ -19,7 +19,6 @@
+ #include <compositionengine/DisplayColorProfile.h>
+ #include <compositionengine/LayerFECompositionState.h>
+ #include <compositionengine/Output.h>
+-#include <compositionengine/UdfpsExtension.h>
+ #include <compositionengine/impl/HwcBufferCache.h>
+ #include <compositionengine/impl/OutputCompositionState.h>
+ #include <compositionengine/impl/OutputLayer.h>
+@@ -406,16 +405,7 @@ void OutputLayer::writeOutputDependentGeometryStateToHWC(HWC2::Layer* hwcLayer,
+               sourceCrop.bottom, to_string(error).c_str(), static_cast<int32_t>(error));
+     }
+ 
+-
+-    uint32_t z_udfps = z;
+-    if ((strcmp(getLayerFE().getDebugName(), UDFPS_LAYER_NAME) == 0)
+-            || (strcmp(getLayerFE().getDebugName(), UDFPS_BIOMETRIC_PROMPT_LAYER_NAME) == 0)) {
+-        z_udfps = getUdfpsZOrder(z, false);
+-    } else if (strcmp(getLayerFE().getDebugName(), UDFPS_TOUCHED_LAYER_NAME) == 0) {
+-        z_udfps = getUdfpsZOrder(z, true);
+-    }
+-
+-    if (auto error = hwcLayer->setZOrder(z_udfps); error != hal::Error::NONE) {
++    if (auto error = hwcLayer->setZOrder(z); error != hal::Error::NONE) {
+         ALOGE("[%s] Failed to set Z %u: %s (%d)", getLayerFE().getDebugName(), z,
+               to_string(error).c_str(), static_cast<int32_t>(error));
+     }
+diff --git a/services/surfaceflinger/CompositionEngine/src/UdfpsExtension.cpp b/services/surfaceflinger/CompositionEngine/src/UdfpsExtension.cpp
+deleted file mode 100644
+index 2d9d086dd2..0000000000
+--- a/services/surfaceflinger/CompositionEngine/src/UdfpsExtension.cpp
++++ /dev/null
+@@ -1,27 +0,0 @@
+-/*
+- * Copyright 2020 The LineageOS Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-#ifndef TARGET_PROVIDES_UDFPS_LIB
+-#include <compositionengine/UdfpsExtension.h>
+-
+-uint32_t getUdfpsZOrder(uint32_t z, __unused bool touched) {
+-    return z;
+-}
+-
+-uint64_t getUdfpsUsageBits(uint64_t usageBits, __unused bool touched) {
+-    return usageBits;
+-}
+-#endif
+-- 
+2.17.0
+

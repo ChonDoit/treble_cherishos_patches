@@ -1,0 +1,46 @@
+From e291f73c5b72924f8105833994e683e061d1e360 Mon Sep 17 00:00:00 2001
+From: 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 <thphantomblog@gmail.com>
+Date: Thu, 24 Feb 2022 14:45:04 +0000
+Subject: [PATCH] Adress App Lock sepolicy
+
+---
+ private/service.te       | 2 ++
+ private/service_contexts | 2 ++
+ private/system_server.te | 4 ++++
+ 3 files changed, 8 insertions(+)
+
+diff --git a/private/service.te b/private/service.te
+index 7f692f35c..ff3d882c5 100644
+--- a/private/service.te
++++ b/private/service.te
+@@ -10,3 +10,5 @@ type statscompanion_service,        system_server_service, service_manager_type;
+ type statsmanager_service,          system_api_service, system_server_service, service_manager_type;
+ type tracingproxy_service,          system_server_service, service_manager_type;
+ type uce_service,                   service_manager_type;
++type app_lock_service, system_api_service, system_server_service, service_manager_type;
++
+diff --git a/private/service_contexts b/private/service_contexts
+index 3fd342b9b..16e71d322 100644
+--- a/private/service_contexts
++++ b/private/service_contexts
+@@ -308,3 +308,5 @@ wifiaware                                 u:object_r:wifiaware_service:s0
+ wifirtt                                   u:object_r:rttmanager_service:s0
+ window                                    u:object_r:window_service:s0
+ *                                         u:object_r:default_android_service:s0
++app_lock                                  u:object_r:app_lock_service:s0
++
+diff --git a/private/system_server.te b/private/system_server.te
+index 3fa7fe452..2d1195772 100644
+--- a/private/system_server.te
++++ b/private/system_server.te
+@@ -1408,3 +1408,7 @@ neverallowxperm { domain -system_server } binder_device:chr_file ioctl { BINDER_
+ # Only system server can write the font files.
+ neverallow { domain -init -system_server } font_data_file:file no_w_file_perms;
+ neverallow { domain -init -system_server } font_data_file:dir no_w_dir_perms;
++
++# App Lock
++add_service(system_server, app_lock_service);
++
+-- 
+2.17.1
+

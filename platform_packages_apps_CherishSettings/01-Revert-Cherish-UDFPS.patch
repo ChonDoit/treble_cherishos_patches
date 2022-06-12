@@ -1,0 +1,1184 @@
+From bdd85d972b100992f92705e1b3ea33d2d0c523d3 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Sun, 1 May 2022 15:53:28 +0000
+Subject: [PATCH 1/6] Revert "Cherish: Custom FOD Icon [2/2]"
+
+This reverts commit 23549703f60d4ebdde3450d21dc098f2224a696f.
+---
+ res/values/cherish_strings.xml                |  11 +-
+ res/xml/cherish_settings_udfps.xml            |  14 ---
+ .../settings/fragments/UdfpsSettings.java     | 101 +-----------------
+ 3 files changed, 8 insertions(+), 118 deletions(-)
+
+diff --git a/res/values/cherish_strings.xml b/res/values/cherish_strings.xml
+index 2b2d1f5..3ff873a 100644
+--- a/res/values/cherish_strings.xml
++++ b/res/values/cherish_strings.xml
+@@ -483,18 +483,15 @@
+ 	<!-- Udfps Haptic Feedback -->
+     <string name="udfps_haptic_feedback_title">FOD haptic feedback</string>
+     <string name="udfps_haptic_feedback_summary">Vibrate when touching FOD icon</string>
+-	
+-	<!-- Custom FOD Icon -->
+-    <string name="custom_fp_icon_title">Custom UDFPS Icon</string>
+-    <string name="custom_fp_icon_summary">Enable custom UDFPS Icon from files</string>
+-    <string name="custom_fp_select_title">Select Custom UDFPS Icon</string>
+-    <string name="custom_fp_select_summary">Select custom image from your saved files or gallery</string>
+-	
++
+     <!-- Privacy indicators -->
+     <string name="mic_camera_privacy_indicator_title">Mic and camera privacy indicator</string>
+     <string name="mic_camera_privacy_indicator_summary">Show separate indicator when an any app uses mic or camera</string>
+     <string name="location_privacy_indicator_title">Location privacy indicator</string>
+     <string name="location_privacy_indicator_summary">Show separate indicator when an any app uses location</string>
++
++    <!-- Location privacy indicator -->
++    <string name="location_privacy_indicator_title">Show privacy indicator for location</string>
+ 	
+ 	<!-- Sb Icon Style -->
+     <string name="statusbar_icons_style">Colored Statusbar Icons</string>
+diff --git a/res/xml/cherish_settings_udfps.xml b/res/xml/cherish_settings_udfps.xml
+index 1887e2f..5ed2971 100644
+--- a/res/xml/cherish_settings_udfps.xml
++++ b/res/xml/cherish_settings_udfps.xml
+@@ -31,20 +31,6 @@
+         android:key="udfps_customization"
+         android:title="UDFPS Customization">
+     
+-        <com.cherish.settings.preferences.SystemSettingSwitchPreference
+-            android:key="custom_fp_icon_enabled"
+-            android:title="@string/custom_fp_icon_title"
+-            android:summary="@string/custom_fp_icon_summary"
+-            android:defaultValue="false" />
+-
+-        <Preference
+-            android:key="custom_fp_file_select"
+-            android:title="@string/custom_fp_select_title"
+-            android:summary="@string/custom_fp_select_summary"
+-            android:dependency="custom_fp_icon_enabled"
+-            android:persistent="false" >
+-        </Preference>
+-
+         <Preference
+             android:key="udfps_icon_picker"
+             android:title="@string/udfps_icon_picker_title"
+diff --git a/src/com/cherish/settings/fragments/UdfpsSettings.java b/src/com/cherish/settings/fragments/UdfpsSettings.java
+index 4f26188..60b1394 100644
+--- a/src/com/cherish/settings/fragments/UdfpsSettings.java
++++ b/src/com/cherish/settings/fragments/UdfpsSettings.java
+@@ -27,16 +27,8 @@ import android.app.WallpaperManager;
+ import android.content.Intent;
+ import android.content.res.Resources;
+ import android.hardware.fingerprint.FingerprintManager;
+-import android.graphics.Bitmap;
+-import android.graphics.BitmapFactory;
+-import android.graphics.Color;
+-import android.graphics.drawable.ColorDrawable;
+-import android.graphics.drawable.Drawable;
+-import android.graphics.drawable.BitmapDrawable;
+ import android.net.Uri;
+ import android.os.Bundle;
+-import android.os.UserHandle;
+-import android.os.ParcelFileDescriptor;
+ import androidx.preference.ListPreference;
+ import androidx.preference.Preference;
+ import androidx.preference.PreferenceCategory;
+@@ -46,7 +38,6 @@ import androidx.preference.SwitchPreference;
+ import androidx.preference.PreferenceScreen;
+ import androidx.preference.Preference.OnPreferenceChangeListener;
+ import android.provider.Settings;
+-import android.text.TextUtils;
+ import com.android.settings.R;
+ import com.android.settings.SettingsPreferenceFragment;
+ 
+@@ -54,25 +45,10 @@ import com.android.internal.util.cherish.fod.FodUtils;
+ import com.android.internal.util.cherish.CherishUtils;
+ 
+ import com.cherish.settings.preferences.SystemSettingSwitchPreference;
+-import com.cherish.settings.fragments.UdfpsIconPicker;
+-
+-import java.io.FileDescriptor;
+-import java.util.Arrays;
+-import java.util.ArrayList;
+-import java.util.Collection;
+-import java.util.List;
+ 
+ public class UdfpsSettings extends SettingsPreferenceFragment implements
+         Preference.OnPreferenceChangeListener {
+ 
+-    private static final String CUSTOM_FOD_ICON_KEY = "custom_fp_icon_enabled";
+-    private static final String CUSTOM_FP_FILE_SELECT = "custom_fp_file_select";
+-    private static final int REQUEST_PICK_IMAGE = 0;
+-
+-    private Preference mCustomFPImage;
+-    private SystemSettingSwitchPreference mCustomFodIcon;
+-    private Preference mUdfpsIconPicker;
+-
+     @Override
+     public void onCreate(Bundle icicle) {
+         super.onCreate(icicle);
+@@ -81,88 +57,19 @@ public class UdfpsSettings extends SettingsPreferenceFragment implements
+         final PreferenceScreen prefScreen = getPreferenceScreen();
+         Resources resources = getResources();
+ 
+-        /**
+         boolean udfpsResPkgInstalled = CherishUtils.isPackageInstalled(getContext(),
+                 "com.cherish.udfps.resources");
+-		PreferenceCategory udfps_custom = (PreferenceCategory) prefScreen.findPreference("udfps_customization");*/
+-
+-        mUdfpsIconPicker = (Preference) prefScreen.findPreference("udfps_icon_picker");
+-
+-        mCustomFPImage = findPreference(CUSTOM_FP_FILE_SELECT);
+-        final String customIconURI = Settings.System.getString(getContext().getContentResolver(),
+-               Settings.System.OMNI_CUSTOM_FP_ICON);
+-        if (!TextUtils.isEmpty(customIconURI)) {
+-            setPickerIcon(customIconURI);
+-        }
+-
+-        mCustomFodIcon = (SystemSettingSwitchPreference) findPreference(CUSTOM_FOD_ICON_KEY);
+-        boolean val = Settings.System.getIntForUser(getActivity().getContentResolver(),
+-                Settings.System.OMNI_CUSTOM_FP_ICON_ENABLED, 0, UserHandle.USER_CURRENT) == 1;
+-        mCustomFodIcon.setOnPreferenceChangeListener(this);
+-        if (val) {
+-            mUdfpsIconPicker.setEnabled(false);
+-        } else {
+-            mUdfpsIconPicker.setEnabled(true);
++		PreferenceCategory udfps_custom = (PreferenceCategory) prefScreen.findPreference("udfps_customization");
++        if (!udfpsResPkgInstalled) {
++            prefScreen.removePreference(udfps_custom);
+         }
+     }
+ 
+-    @Override
+-    public boolean onPreferenceTreeClick(Preference preference) {
+-        if (preference == mCustomFPImage) {
+-            Intent intent = new Intent(Intent.ACTION_PICK);
+-            intent.setType("image/*");
+-            startActivityForResult(intent, REQUEST_PICK_IMAGE);
+-            return true;
+-        }
+-        return super.onPreferenceTreeClick(preference);
+-    }
+-
+-    @Override
+     public boolean onPreferenceChange(Preference preference, Object newValue) {
+-        if (preference == mCustomFodIcon) {
+-            boolean val = (Boolean) newValue;
+-            Settings.System.putIntForUser(getActivity().getContentResolver(),
+-                    Settings.System.OMNI_CUSTOM_FP_ICON_ENABLED, val ? 1 : 0,
+-                    UserHandle.USER_CURRENT);
+-            if (val) {
+-                mUdfpsIconPicker.setEnabled(false);
+-            } else {
+-                mUdfpsIconPicker.setEnabled(true);
+-            }
+-            return true;
+-        }
++        ContentResolver resolver = getActivity().getContentResolver();
+         return false;
+     }
+ 
+-    @Override
+-    public void onActivityResult(int requestCode, int resultCode, Intent result) {
+-       if (requestCode == REQUEST_PICK_IMAGE && resultCode == Activity.RESULT_OK) {
+-           Uri uri = null;
+-           if (result != null) {
+-               uri = result.getData();
+-               setPickerIcon(uri.toString());
+-               Settings.System.putString(getContentResolver(), Settings.System.OMNI_CUSTOM_FP_ICON,
+-                   uri.toString());
+-            }
+-        } else if (requestCode == REQUEST_PICK_IMAGE && resultCode == Activity.RESULT_CANCELED) {
+-            mCustomFPImage.setIcon(new ColorDrawable(Color.TRANSPARENT));
+-            Settings.System.putString(getContentResolver(), Settings.System.OMNI_CUSTOM_FP_ICON, "");
+-        }
+-    }
+-
+-    private void setPickerIcon(String uri) {
+-        try {
+-                ParcelFileDescriptor parcelFileDescriptor =
+-                    getContext().getContentResolver().openFileDescriptor(Uri.parse(uri), "r");
+-                FileDescriptor fileDescriptor = parcelFileDescriptor.getFileDescriptor();
+-                Bitmap image = BitmapFactory.decodeFileDescriptor(fileDescriptor);
+-                parcelFileDescriptor.close();
+-                Drawable d = new BitmapDrawable(getResources(), image);
+-                mCustomFPImage.setIcon(d);
+-            }
+-            catch (Exception e) {}
+-    }
+-
+     @Override
+     public int getMetricsCategory() {
+         return MetricsProto.MetricsEvent.CHERISH_SETTINGS;
+-- 
+2.17.1
+
+
+From 94c0c8dc012f4ef5a09bcc16d51bd9699413cace Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Sun, 1 May 2022 15:54:55 +0000
+Subject: [PATCH 2/6] Revert "UDFPS Settings: beautifications"
+
+This reverts commit 35e75fc2d6309da2b5b426ce04c233f24f8d54b0.
+---
+ res/values/cherish_strings.xml                |  4 -
+ res/xml/cherish_settings_lockscreen.xml       | 26 ++++++-
+ res/xml/cherish_settings_udfps.xml            | 48 ------------
+ .../fragments/LockScreenSettings.java         |  6 ++
+ .../settings/fragments/UdfpsSettings.java     | 78 -------------------
+ 5 files changed, 28 insertions(+), 134 deletions(-)
+ delete mode 100644 res/xml/cherish_settings_udfps.xml
+ delete mode 100644 src/com/cherish/settings/fragments/UdfpsSettings.java
+
+diff --git a/res/values/cherish_strings.xml b/res/values/cherish_strings.xml
+index 3ff873a..8364b22 100644
+--- a/res/values/cherish_strings.xml
++++ b/res/values/cherish_strings.xml
+@@ -476,10 +476,6 @@
+     <string name="udfps_icon_picker_title">Udfps icon picker</string>
+     <string name="udfps_icon_picker_summary">Choose your favorite fingerprint icon</string>
+ 	
+-	<!-- Udfps Custom Options -->
+-    <string name="udfps_settings_title">Udfps Options</string>
+-    <string name="udfps_settings_summary">Different menus for customizing the udfps</string>
+-	
+ 	<!-- Udfps Haptic Feedback -->
+     <string name="udfps_haptic_feedback_title">FOD haptic feedback</string>
+     <string name="udfps_haptic_feedback_summary">Vibrate when touching FOD icon</string>
+diff --git a/res/xml/cherish_settings_lockscreen.xml b/res/xml/cherish_settings_lockscreen.xml
+index a3915fa..f58c7f1 100644
+--- a/res/xml/cherish_settings_lockscreen.xml
++++ b/res/xml/cherish_settings_lockscreen.xml
+@@ -88,12 +88,30 @@
+ 	<PreferenceCategory
+         android:key="udfps_category"
+         android:title="@string/udfps_category">
++	
++	<com.cherish.settings.preferences.SystemSettingSwitchPreference
++            android:key="udfps_haptic_feedback"
++            android:title="@string/udfps_haptic_feedback_title"
++            android:summary="@string/udfps_haptic_feedback_summary"
++            android:defaultValue="true" />
++	
++	<com.cherish.settings.preferences.SystemSettingSwitchPreference
++            android:key="screen_off_fod"
++            android:title="@string/screen_off_fod_title"
++            android:summary="@string/screen_off_fod_summary"
++            android:defaultValue="true" />
++			
++	<Preference
++            android:key="udfps_icon_picker"
++            android:title="@string/udfps_icon_picker_title"
++            android:summary="@string/udfps_icon_picker_summary"
++            android:fragment="com.cherish.settings.fragments.UdfpsIconPicker" />
+ 
+         <Preference
+-            android:key="udfps_settings"
+-            android:title="@string/udfps_settings_title"
+-            android:summary="@string/udfps_settings_summary"
+-            android:fragment="com.cherish.settings.fragments.UdfpsSettings" />
++            android:key="udfps_recognizing_animation_preview"
++            android:title="@string/udfps_recog_animation_effect_title"
++            android:summary="@string/udfps_recog_animation_effect_summary"
++            android:fragment="com.cherish.settings.fragments.UdfpsAnimation"/>
+ 			
+ 	</PreferenceCategory>
+ </PreferenceScreen>
+diff --git a/res/xml/cherish_settings_udfps.xml b/res/xml/cherish_settings_udfps.xml
+deleted file mode 100644
+index 5ed2971..0000000
+--- a/res/xml/cherish_settings_udfps.xml
++++ /dev/null
+@@ -1,48 +0,0 @@
+-<?xml version="1.0" encoding="utf-8"?>
+-<!-- Copyright (C) 2020-22 The CherishOS Projects
+-     Licensed under the Apache License, Version 2.0 (the "License");
+-     you may not use this file except in compliance with the License.
+-     You may obtain a copy of the License at
+-          http://www.apache.org/licenses/LICENSE-2.0
+-     Unless required by applicable law or agreed to in writing, software
+-     distributed under the License is distributed on an "AS IS" BASIS,
+-     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+-     See the License for the specific language governing permissions and
+-     limitations under the License.
+--->
+-<PreferenceScreen
+-    xmlns:android="http://schemas.android.com/apk/res/android"
+-    xmlns:settings="http://schemas.android.com/apk/res/com.android.settings"
+-	android:title="@string/udfps_category">
+-
+-    <com.cherish.settings.preferences.SystemSettingSwitchPreference
+-        android:key="udfps_haptic_feedback"
+-        android:title="@string/udfps_haptic_feedback_title"
+-        android:summary="@string/udfps_haptic_feedback_summary"
+-        android:defaultValue="true" />
+-
+-    <com.cherish.settings.preferences.SystemSettingSwitchPreference
+-        android:key="screen_off_fod"
+-        android:title="@string/screen_off_fod_title"
+-        android:summary="@string/screen_off_fod_summary"
+-        android:defaultValue="true" />
+-
+-    <PreferenceCategory
+-        android:key="udfps_customization"
+-        android:title="UDFPS Customization">
+-    
+-        <Preference
+-            android:key="udfps_icon_picker"
+-            android:title="@string/udfps_icon_picker_title"
+-            android:summary="@string/udfps_icon_picker_summary"
+-            android:fragment="com.cherish.settings.fragments.UdfpsIconPicker" />
+-
+-        <Preference
+-            android:key="udfps_recognizing_animation_preview"
+-            android:title="@string/udfps_recog_animation_effect_title"
+-            android:summary="@string/udfps_recog_animation_effect_summary"
+-            android:fragment="com.cherish.settings.fragments.UdfpsAnimation"/>
+-    
+-    </PreferenceCategory>
+-
+-</PreferenceScreen>
+diff --git a/src/com/cherish/settings/fragments/LockScreenSettings.java b/src/com/cherish/settings/fragments/LockScreenSettings.java
+index 3236962..4d024db 100644
+--- a/src/com/cherish/settings/fragments/LockScreenSettings.java
++++ b/src/com/cherish/settings/fragments/LockScreenSettings.java
+@@ -60,6 +60,8 @@ public class LockScreenSettings extends SettingsPreferenceFragment implements
+         Preference.OnPreferenceChangeListener {
+ 			
+ 	private static final String AOD_SCHEDULE_KEY = "always_on_display_schedule";
++	private static final String SCREEN_OFF_FOD_KEY = "screen_off_fod";
++	private static final String UDFPS_HAPTIC_FEEDBACK = "udfps_haptic_feedback";
+ 	
+ 	static final int MODE_DISABLED = 0;
+     static final int MODE_NIGHT = 1;
+@@ -69,6 +71,8 @@ public class LockScreenSettings extends SettingsPreferenceFragment implements
+ 	
+ 	Preference mAODPref;
+ 	Preference mFODPref;
++	private SystemSettingSwitchPreference mFODScreenOff;
++    private SystemSettingSwitchPreference mUdfpsHapticFeedback;
+ 
+     @Override
+     public void onCreate(Bundle icicle) {
+@@ -90,6 +94,8 @@ public class LockScreenSettings extends SettingsPreferenceFragment implements
+         }
+ 		
+ 		PreferenceCategory udfps = (PreferenceCategory) prefScreen.findPreference("udfps_category");
++		mFODScreenOff = (SystemSettingSwitchPreference) findPreference(SCREEN_OFF_FOD_KEY);
++        mUdfpsHapticFeedback = (SystemSettingSwitchPreference) findPreference(UDFPS_HAPTIC_FEEDBACK);
+         if (!FodUtils.hasFodSupport(getContext())) {
+             prefScreen.removePreference(udfps);
+         }
+diff --git a/src/com/cherish/settings/fragments/UdfpsSettings.java b/src/com/cherish/settings/fragments/UdfpsSettings.java
+deleted file mode 100644
+index 60b1394..0000000
+--- a/src/com/cherish/settings/fragments/UdfpsSettings.java
++++ /dev/null
+@@ -1,78 +0,0 @@
+-/*
+- * Copyright (C) 2020-22 The CherishOS Projects
+- *
+- * This program is free software: you can redistribute it and/or modify
+- * it under the terms of the GNU General Public License as published by
+- * the Free Software Foundation, either version 2 of the License, or
+- * (at your option) any later version.
+- *
+- * This program is distributed in the hope that it will be useful,
+- * but WITHOUT ANY WARRANTY; without even the implied warranty of
+- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+- * GNU General Public License for more details.
+- *
+- * You should have received a copy of the GNU General Public License
+- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+- *
+- */
+-
+-package com.cherish.settings.fragments;
+-
+-import com.android.internal.logging.nano.MetricsProto;
+-
+-import android.app.Activity;
+-import android.content.Context;
+-import android.content.ContentResolver;
+-import android.app.WallpaperManager;
+-import android.content.Intent;
+-import android.content.res.Resources;
+-import android.hardware.fingerprint.FingerprintManager;
+-import android.net.Uri;
+-import android.os.Bundle;
+-import androidx.preference.ListPreference;
+-import androidx.preference.Preference;
+-import androidx.preference.PreferenceCategory;
+-import androidx.preference.PreferenceFragment;
+-import androidx.preference.PreferenceManager;
+-import androidx.preference.SwitchPreference;
+-import androidx.preference.PreferenceScreen;
+-import androidx.preference.Preference.OnPreferenceChangeListener;
+-import android.provider.Settings;
+-import com.android.settings.R;
+-import com.android.settings.SettingsPreferenceFragment;
+-
+-import com.android.internal.util.cherish.fod.FodUtils;
+-import com.android.internal.util.cherish.CherishUtils;
+-
+-import com.cherish.settings.preferences.SystemSettingSwitchPreference;
+-
+-public class UdfpsSettings extends SettingsPreferenceFragment implements
+-        Preference.OnPreferenceChangeListener {
+-
+-    @Override
+-    public void onCreate(Bundle icicle) {
+-        super.onCreate(icicle);
+-        addPreferencesFromResource(R.xml.cherish_settings_udfps);
+-
+-        final PreferenceScreen prefScreen = getPreferenceScreen();
+-        Resources resources = getResources();
+-
+-        boolean udfpsResPkgInstalled = CherishUtils.isPackageInstalled(getContext(),
+-                "com.cherish.udfps.resources");
+-		PreferenceCategory udfps_custom = (PreferenceCategory) prefScreen.findPreference("udfps_customization");
+-        if (!udfpsResPkgInstalled) {
+-            prefScreen.removePreference(udfps_custom);
+-        }
+-    }
+-
+-    public boolean onPreferenceChange(Preference preference, Object newValue) {
+-        ContentResolver resolver = getActivity().getContentResolver();
+-        return false;
+-    }
+-
+-    @Override
+-    public int getMetricsCategory() {
+-        return MetricsProto.MetricsEvent.CHERISH_SETTINGS;
+-    }
+-}
+-
+-- 
+2.17.1
+
+
+From a2b2570bdf15d7adcb279572dce4629fe47dcd88 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Sun, 1 May 2022 15:55:07 +0000
+Subject: [PATCH 3/6] Revert "[SQUASH] Bring back Udfps icons and Animations
+ [2/3]"
+
+This reverts commit 72f3241d7d9fa39f9c42dee2f6e42a7afeb2a188.
+---
+ res/values/cherish_strings.xml                |  15 -
+ res/xml/cherish_settings_lockscreen.xml       |  24 --
+ .../fragments/LockScreenSettings.java         |  10 +-
+ .../settings/fragments/UdfpsAnimation.java    | 264 ------------------
+ .../settings/fragments/UdfpsIconPicker.java   | 211 --------------
+ 5 files changed, 2 insertions(+), 522 deletions(-)
+ delete mode 100644 src/com/cherish/settings/fragments/UdfpsAnimation.java
+ delete mode 100644 src/com/cherish/settings/fragments/UdfpsIconPicker.java
+
+diff --git a/res/values/cherish_strings.xml b/res/values/cherish_strings.xml
+index 8364b22..fd6a6ad 100644
+--- a/res/values/cherish_strings.xml
++++ b/res/values/cherish_strings.xml
+@@ -464,21 +464,6 @@
+     <string name="volume_steps_system_title">Volume steps: System</string>
+     <string name="volume_steps_voice_call_title">Volume steps: Voice Call</string>
+     <string name="volume_steps_reset">Reset</string>
+-	
+-	<!-- Udfps animations -->
+-    <string name="udfps_category">Udfps</string>
+-    <string name="udfps_recog_animation">Udfps animation</string>
+-    <string name="udfps_recog_animation_summary">Shows an animation while reading your finger</string>
+-    <string name="udfps_recog_animation_effect_title">Udfps animation effect</string>
+-    <string name="udfps_recog_animation_effect_summary">Choose animation effect</string>
+-
+-    <!-- Udfps icon picker -->
+-    <string name="udfps_icon_picker_title">Udfps icon picker</string>
+-    <string name="udfps_icon_picker_summary">Choose your favorite fingerprint icon</string>
+-	
+-	<!-- Udfps Haptic Feedback -->
+-    <string name="udfps_haptic_feedback_title">FOD haptic feedback</string>
+-    <string name="udfps_haptic_feedback_summary">Vibrate when touching FOD icon</string>
+ 
+     <!-- Privacy indicators -->
+     <string name="mic_camera_privacy_indicator_title">Mic and camera privacy indicator</string>
+diff --git a/res/xml/cherish_settings_lockscreen.xml b/res/xml/cherish_settings_lockscreen.xml
+index f58c7f1..9c90527 100644
+--- a/res/xml/cherish_settings_lockscreen.xml
++++ b/res/xml/cherish_settings_lockscreen.xml
+@@ -85,33 +85,9 @@
+ 
+     </PreferenceCategory> -->
+ 	
+-	<PreferenceCategory
+-        android:key="udfps_category"
+-        android:title="@string/udfps_category">
+-	
+-	<com.cherish.settings.preferences.SystemSettingSwitchPreference
+-            android:key="udfps_haptic_feedback"
+-            android:title="@string/udfps_haptic_feedback_title"
+-            android:summary="@string/udfps_haptic_feedback_summary"
+-            android:defaultValue="true" />
+-	
+ 	<com.cherish.settings.preferences.SystemSettingSwitchPreference
+             android:key="screen_off_fod"
+             android:title="@string/screen_off_fod_title"
+             android:summary="@string/screen_off_fod_summary"
+             android:defaultValue="true" />
+-			
+-	<Preference
+-            android:key="udfps_icon_picker"
+-            android:title="@string/udfps_icon_picker_title"
+-            android:summary="@string/udfps_icon_picker_summary"
+-            android:fragment="com.cherish.settings.fragments.UdfpsIconPicker" />
+-
+-        <Preference
+-            android:key="udfps_recognizing_animation_preview"
+-            android:title="@string/udfps_recog_animation_effect_title"
+-            android:summary="@string/udfps_recog_animation_effect_summary"
+-            android:fragment="com.cherish.settings.fragments.UdfpsAnimation"/>
+-			
+-	</PreferenceCategory>
+ </PreferenceScreen>
+diff --git a/src/com/cherish/settings/fragments/LockScreenSettings.java b/src/com/cherish/settings/fragments/LockScreenSettings.java
+index 4d024db..3c2f3e0 100644
+--- a/src/com/cherish/settings/fragments/LockScreenSettings.java
++++ b/src/com/cherish/settings/fragments/LockScreenSettings.java
+@@ -51,7 +51,6 @@ import com.android.settings.search.BaseSearchIndexProvider;
+ import com.android.settingslib.search.SearchIndexable;
+ import android.provider.SearchIndexableResource;
+ import com.android.internal.util.cherish.fod.FodUtils;
+-import com.android.internal.util.cherish.CherishUtils;
+ import java.util.ArrayList;
+ import java.util.List;
+ 
+@@ -61,7 +60,6 @@ public class LockScreenSettings extends SettingsPreferenceFragment implements
+ 			
+ 	private static final String AOD_SCHEDULE_KEY = "always_on_display_schedule";
+ 	private static final String SCREEN_OFF_FOD_KEY = "screen_off_fod";
+-	private static final String UDFPS_HAPTIC_FEEDBACK = "udfps_haptic_feedback";
+ 	
+ 	static final int MODE_DISABLED = 0;
+     static final int MODE_NIGHT = 1;
+@@ -71,8 +69,6 @@ public class LockScreenSettings extends SettingsPreferenceFragment implements
+ 	
+ 	Preference mAODPref;
+ 	Preference mFODPref;
+-	private SystemSettingSwitchPreference mFODScreenOff;
+-    private SystemSettingSwitchPreference mUdfpsHapticFeedback;
+ 
+     @Override
+     public void onCreate(Bundle icicle) {
+@@ -93,11 +89,9 @@ public class LockScreenSettings extends SettingsPreferenceFragment implements
+             e.printStackTrace();
+         }
+ 		
+-		PreferenceCategory udfps = (PreferenceCategory) prefScreen.findPreference("udfps_category");
+-		mFODScreenOff = (SystemSettingSwitchPreference) findPreference(SCREEN_OFF_FOD_KEY);
+-        mUdfpsHapticFeedback = (SystemSettingSwitchPreference) findPreference(UDFPS_HAPTIC_FEEDBACK);
++		mFODPref = findPreference(SCREEN_OFF_FOD_KEY);
+         if (!FodUtils.hasFodSupport(getContext())) {
+-            prefScreen.removePreference(udfps);
++            removePreference(SCREEN_OFF_FOD_KEY);
+         }
+ 		
+ 		mAODPref = findPreference(AOD_SCHEDULE_KEY);
+diff --git a/src/com/cherish/settings/fragments/UdfpsAnimation.java b/src/com/cherish/settings/fragments/UdfpsAnimation.java
+deleted file mode 100644
+index 5d22bcb..0000000
+--- a/src/com/cherish/settings/fragments/UdfpsAnimation.java
++++ /dev/null
+@@ -1,264 +0,0 @@
+-/*
+- * Copyright (C) 2021 AospExtended ROM Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-package com.cherish.settings.fragments;
+-
+-import android.content.ContentResolver;
+-import android.content.Context;
+-import android.content.res.Resources;
+-import android.content.pm.PackageManager;
+-import android.graphics.drawable.AnimationDrawable;
+-import android.graphics.drawable.Drawable;
+-import android.os.Bundle;
+-import android.provider.SearchIndexableResource;
+-import android.provider.Settings;
+-import android.view.LayoutInflater;
+-import android.view.View;
+-import android.view.Gravity;
+-import android.view.ViewGroup;
+-import android.widget.ImageView;
+-import android.widget.LinearLayout;
+-import android.widget.FrameLayout;
+-import android.widget.TextView;
+-import android.widget.Toast;
+-import android.text.TextUtils;
+-import androidx.preference.PreferenceViewHolder;
+-import android.view.ViewGroup.LayoutParams;
+-
+-import androidx.annotation.NonNull;
+-import androidx.annotation.Nullable;
+-import androidx.recyclerview.widget.GridLayoutManager;
+-import androidx.recyclerview.widget.RecyclerView.ViewHolder;
+-import androidx.recyclerview.widget.RecyclerView;
+-import android.net.Uri;
+-import androidx.core.content.res.ResourcesCompat;
+-import androidx.preference.Preference;
+-import androidx.preference.Preference.OnPreferenceChangeListener;
+-import androidx.preference.PreferenceScreen;
+-
+-import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
+-import com.android.settings.R;
+-import com.android.settings.search.BaseSearchIndexProvider;
+-import com.android.settingslib.search.Indexable;
+-import com.android.settings.SettingsPreferenceFragment;
+-
+-import android.widget.Switch;
+-import com.android.settings.SettingsActivity;
+-import com.android.settings.widget.SettingsMainSwitchBar;
+-import com.android.settingslib.widget.OnMainSwitchChangeListener;
+-
+-import com.bumptech.glide.Glide;
+-
+-import java.util.ArrayList;
+-import java.util.List;
+-import java.util.Arrays;
+-
+-import org.json.JSONObject;
+-import org.json.JSONException;
+-
+-public class UdfpsAnimation extends SettingsPreferenceFragment implements
+-        OnMainSwitchChangeListener {
+-
+-    private Switch mSwitch;
+-
+-    private RecyclerView mRecyclerView;
+-    private String mPkg = "com.cherish.udfps.resources";
+-    private AnimationDrawable animation;
+-
+-    private Resources udfpsRes;
+-
+-    private String[] mAnims;
+-    private String[] mAnimPreviews;
+-    private String[] mTitles;
+-
+-    private boolean mEnabled;
+-
+-    @Override
+-    public void onCreate(Bundle savedInstanceState) {
+-        super.onCreate(savedInstanceState);
+-        getActivity().setTitle(R.string.udfps_recog_animation_effect_title);
+-
+-        loadResources();
+-    }
+-
+-    private void loadResources() {
+-        try {
+-            PackageManager pm = getActivity().getPackageManager();
+-            udfpsRes = pm.getResourcesForApplication(mPkg);
+-        } catch (PackageManager.NameNotFoundException e) {
+-            e.printStackTrace();
+-        }
+-
+-        mAnims = udfpsRes.getStringArray(udfpsRes.getIdentifier("udfps_animation_styles",
+-                "array", mPkg));
+-        mAnimPreviews = udfpsRes.getStringArray(udfpsRes.getIdentifier("udfps_animation_previews",
+-                "array", mPkg));
+-        mTitles = udfpsRes.getStringArray(udfpsRes.getIdentifier("udfps_animation_titles",
+-                "array", mPkg));
+-    }
+-
+-    @Override
+-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+-            @Nullable Bundle savedInstanceState) {
+-        View view = inflater.inflate(
+-                R.layout.item_view, container, false);
+-
+-        mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
+-        GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(), 3);
+-        mRecyclerView.setLayoutManager(gridLayoutManager);
+-        UdfpsAnimAdapter mUdfpsAnimAdapter = new UdfpsAnimAdapter(getActivity());
+-        mRecyclerView.setAdapter(mUdfpsAnimAdapter);
+-
+-        return view;
+-    }
+-
+-    @Override
+-    public void onActivityCreated(Bundle savedInstanceState) {
+-        super.onActivityCreated(savedInstanceState);
+-        final SettingsActivity activity = (SettingsActivity) getActivity();
+-        final SettingsMainSwitchBar switchBar = activity.getSwitchBar();
+-        mSwitch = switchBar.getSwitch();
+-        mEnabled = Settings.System.getInt(getActivity().getContentResolver(),
+-                       Settings.System.UDFPS_ANIM, 0) == 1;
+-        mSwitch.setChecked(mEnabled);
+-        setEnabled(mEnabled);
+-        switchBar.setTitle(getActivity().getString(R.string.udfps_recog_animation));
+-        switchBar.addOnSwitchChangeListener(this);
+-        switchBar.show();
+-    }
+-
+-    @Override
+-    public void onSwitchChanged(Switch switchView, boolean isChecked) {
+-        Settings.System.putInt(getActivity().getContentResolver(),
+-                Settings.System.UDFPS_ANIM, isChecked ? 1 : 0);
+-        setEnabled(isChecked);
+-    }
+-
+-    public void setEnabled(boolean enabled) {
+-        for (int i = 0; i < mRecyclerView.getChildCount(); ++i) {
+-            RecyclerView.ViewHolder holder = mRecyclerView.getChildViewHolder(mRecyclerView.getChildAt(i));
+-            holder.itemView.setEnabled(enabled);
+-            holder.itemView.findViewById(R.id.option_thumbnail).setAlpha(enabled ? 1f : 0.5f);
+-            holder.itemView.findViewById(R.id.option_label).setAlpha(enabled ? 1f : 0.5f);
+-        }
+-    }
+-
+-    @Override
+-    public int getMetricsCategory() {
+-        return MetricsEvent.CHERISH_SETTINGS;
+-    }
+-
+-    @Override
+-    public void onResume() {
+-        super.onResume();
+-    }
+-
+-    public class UdfpsAnimAdapter extends RecyclerView.Adapter<UdfpsAnimAdapter.UdfpsAnimViewHolder> {
+-        Context context;
+-        String mSelectedAnim;
+-        String mAppliedAnim;
+-
+-        public UdfpsAnimAdapter(Context context) {
+-            this.context = context;
+-        }
+-
+-        @Override
+-        public UdfpsAnimViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_option, parent, false);
+-            UdfpsAnimViewHolder vh = new UdfpsAnimViewHolder(v);
+-            return vh;
+-        }
+-
+-        @Override
+-        public void onBindViewHolder(UdfpsAnimViewHolder holder, final int position) {
+-            String animName = mAnims[position];
+-
+-            Glide.with(holder.image.getContext())
+-                    .load("")
+-                    .placeholder(getDrawable(holder.image.getContext(), mAnimPreviews[position]))
+-                    .into(holder.image);
+-
+-            holder.name.setText(mTitles[position]);
+-
+-            if (position == Settings.System.getInt(context.getContentResolver(),
+-                Settings.System.UDFPS_ANIM_STYLE, 0)) {
+-                mAppliedAnim = animName;
+-                if (mSelectedAnim == null) {
+-                    mSelectedAnim = animName;
+-                }
+-            }
+-
+-            holder.itemView.setActivated(animName == mSelectedAnim);
+-            holder.itemView.setOnClickListener(new View.OnClickListener() {
+-                @Override
+-                public void onClick(View v) {
+-                    updateActivatedStatus(mSelectedAnim, false);
+-                    updateActivatedStatus(animName, true);
+-                    mSelectedAnim = animName;
+-                    holder.image.setBackgroundDrawable(getDrawable(v.getContext(), mAnims[position]));
+-                    animation = (AnimationDrawable) holder.image.getBackground();
+-                    animation.setOneShot(true);
+-                    animation.start();
+-                    Settings.System.putInt(getActivity().getContentResolver(),
+-                            Settings.System.UDFPS_ANIM_STYLE, position);
+-                }
+-            });
+-
+-            holder.itemView.setEnabled(mEnabled);
+-            holder.itemView.findViewById(R.id.option_thumbnail).setAlpha(mEnabled ? 1f : 0.5f);
+-            holder.itemView.findViewById(R.id.option_label).setAlpha(mEnabled ? 1f : 0.5f);
+-        }
+-
+-        @Override
+-        public int getItemCount() {
+-            return mAnims.length;
+-        }
+-
+-        public class UdfpsAnimViewHolder extends RecyclerView.ViewHolder {
+-            TextView name;
+-            ImageView image;
+-            public UdfpsAnimViewHolder(View itemView) {
+-                super(itemView);
+-                name = (TextView) itemView.findViewById(R.id.option_label);
+-                image = (ImageView) itemView.findViewById(R.id.option_thumbnail);
+-            }
+-        }
+-
+-        private void updateActivatedStatus(String anim, boolean isActivated) {
+-            int index = Arrays.asList(mAnims).indexOf(anim);
+-            if (index < 0) {
+-                return;
+-            }
+-            RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForAdapterPosition(index);
+-            if (holder != null && holder.itemView != null) {
+-                holder.itemView.setActivated(isActivated);
+-            }
+-        }
+-    }
+-
+-    public Drawable getDrawable(Context context, String drawableName) {
+-        try {
+-            PackageManager pm = context.getPackageManager();
+-            Resources res = pm.getResourcesForApplication(mPkg);
+-            return res.getDrawable(res.getIdentifier(drawableName, "drawable", mPkg));
+-        }
+-        catch (PackageManager.NameNotFoundException e) {
+-            e.printStackTrace();
+-        }
+-        return null;
+-    }
+-
+-}
+diff --git a/src/com/cherish/settings/fragments/UdfpsIconPicker.java b/src/com/cherish/settings/fragments/UdfpsIconPicker.java
+deleted file mode 100644
+index b155a61..0000000
+--- a/src/com/cherish/settings/fragments/UdfpsIconPicker.java
++++ /dev/null
+@@ -1,211 +0,0 @@
+-/*
+- * Copyright (C) 2021 AospExtended ROM Project
+- *
+- * Licensed under the Apache License, Version 2.0 (the "License");
+- * you may not use this file except in compliance with the License.
+- * You may obtain a copy of the License at
+- *
+- *      http://www.apache.org/licenses/LICENSE-2.0
+- *
+- * Unless required by applicable law or agreed to in writing, software
+- * distributed under the License is distributed on an "AS IS" BASIS,
+- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+- * See the License for the specific language governing permissions and
+- * limitations under the License.
+- */
+-
+-package com.cherish.settings.fragments;
+-
+-import android.content.ContentResolver;
+-import android.content.Context;
+-import android.content.res.Resources;
+-import android.content.pm.PackageManager;
+-import android.graphics.drawable.AnimationDrawable;
+-import android.graphics.drawable.Drawable;
+-import android.os.Bundle;
+-import android.provider.SearchIndexableResource;
+-import android.provider.Settings;
+-import android.view.LayoutInflater;
+-import android.view.View;
+-import android.view.Gravity;
+-import android.view.ViewGroup;
+-import android.widget.ImageView;
+-import android.widget.LinearLayout;
+-import android.widget.FrameLayout;
+-import android.widget.TextView;
+-import android.widget.Toast;
+-import android.text.TextUtils;
+-import androidx.preference.PreferenceViewHolder;
+-import android.view.ViewGroup.LayoutParams;
+-
+-import androidx.annotation.NonNull;
+-import androidx.annotation.Nullable;
+-import androidx.recyclerview.widget.GridLayoutManager;
+-import androidx.recyclerview.widget.RecyclerView.ViewHolder;
+-import androidx.recyclerview.widget.RecyclerView;
+-import android.net.Uri;
+-import androidx.core.content.res.ResourcesCompat;
+-import androidx.preference.Preference;
+-import androidx.preference.Preference.OnPreferenceChangeListener;
+-import androidx.preference.PreferenceScreen;
+-
+-import com.android.internal.logging.nano.MetricsProto.MetricsEvent;
+-import com.android.settings.R;
+-import com.android.settings.search.BaseSearchIndexProvider;
+-import com.android.settingslib.search.Indexable;
+-import com.android.settings.SettingsPreferenceFragment;
+-
+-import com.bumptech.glide.Glide;
+-
+-import java.util.ArrayList;
+-import java.util.List;
+-import java.util.Arrays;
+-
+-import org.json.JSONObject;
+-import org.json.JSONException;
+-
+-public class UdfpsIconPicker extends SettingsPreferenceFragment {
+-
+-    private RecyclerView mRecyclerView;
+-
+-    private Resources udfpsRes;
+-
+-    private String mPkg = "com.cherish.udfps.resources";
+-
+-    private String[] mIcons;
+-
+-    @Override
+-    public void onCreate(Bundle savedInstanceState) {
+-        super.onCreate(savedInstanceState);
+-        getActivity().setTitle(R.string.udfps_icon_picker_title);
+-
+-        loadResources();
+-    }
+-
+-    private void loadResources() {
+-        try {
+-            PackageManager pm = getActivity().getPackageManager();
+-            udfpsRes = pm.getResourcesForApplication(mPkg);
+-        } catch (PackageManager.NameNotFoundException e) {
+-            e.printStackTrace();
+-        }
+-
+-        mIcons = udfpsRes.getStringArray(udfpsRes.getIdentifier("udfps_icons",
+-                "array", mPkg));
+-    }
+-
+-    @Override
+-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+-            @Nullable Bundle savedInstanceState) {
+-        View view = inflater.inflate(
+-                R.layout.item_view, container, false);
+-
+-        mRecyclerView = (RecyclerView) view.findViewById(R.id.recycler_view);
+-        GridLayoutManager gridLayoutManager = new GridLayoutManager(getActivity(), 3);
+-        mRecyclerView.setLayoutManager(gridLayoutManager);
+-        UdfpsIconAdapter mUdfpsIconAdapter = new UdfpsIconAdapter(getActivity());
+-        mRecyclerView.setAdapter(mUdfpsIconAdapter);
+-
+-        return view;
+-    }
+-
+-    @Override
+-    public int getMetricsCategory() {
+-        return MetricsEvent.CHERISH_SETTINGS;
+-    }
+-
+-    @Override
+-    public void onResume() {
+-        super.onResume();
+-    }
+-
+-    public class UdfpsIconAdapter extends RecyclerView.Adapter<UdfpsIconAdapter.UdfpsIconViewHolder> {
+-        Context context;
+-        String mSelectedIcon;
+-        String mAppliedIcon;
+-
+-        public UdfpsIconAdapter(Context context) {
+-            this.context = context;
+-        }
+-
+-        @Override
+-        public UdfpsIconViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+-            View v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_option, parent, false);
+-            UdfpsIconViewHolder vh = new UdfpsIconViewHolder(v);
+-            return vh;
+-        }
+-
+-        @Override
+-        public void onBindViewHolder(UdfpsIconViewHolder holder, final int position) {
+-            String iconRes = mIcons[position];
+-
+-            Glide.with(holder.image.getContext())
+-                    .load("")
+-                    .placeholder(getDrawable(holder.image.getContext(), mIcons[position]))
+-                    .into(holder.image);
+-
+-            holder.image.setPadding(20,20,20,20);
+-
+-            holder.name.setVisibility(View.GONE);
+-
+-            if (position == Settings.System.getInt(context.getContentResolver(),
+-                Settings.System.UDFPS_ICON, 0)) {
+-                mAppliedIcon = iconRes;
+-                if (mSelectedIcon == null) {
+-                    mSelectedIcon = iconRes;
+-                }
+-            }
+-            holder.itemView.setActivated(iconRes == mSelectedIcon);
+-            holder.itemView.setOnClickListener(new View.OnClickListener() {
+-                @Override
+-                public void onClick(View v) {
+-                    updateActivatedStatus(mSelectedIcon, false);
+-                    updateActivatedStatus(iconRes, true);
+-                    mSelectedIcon = iconRes;
+-                    Settings.System.putInt(getActivity().getContentResolver(),
+-                            Settings.System.UDFPS_ICON, position);
+-                }
+-            });
+-        }
+-
+-        @Override
+-        public int getItemCount() {
+-            return mIcons.length;
+-        }
+-
+-        public class UdfpsIconViewHolder extends RecyclerView.ViewHolder {
+-            TextView name;
+-            ImageView image;
+-            public UdfpsIconViewHolder(View itemView) {
+-                super(itemView);
+-                name = (TextView) itemView.findViewById(R.id.option_label);
+-                image = (ImageView) itemView.findViewById(R.id.option_thumbnail);
+-            }
+-        }
+-
+-        private void updateActivatedStatus(String icon, boolean isActivated) {
+-            int index = Arrays.asList(mIcons).indexOf(icon);
+-            if (index < 0) {
+-                return;
+-            }
+-            RecyclerView.ViewHolder holder = mRecyclerView.findViewHolderForAdapterPosition(index);
+-            if (holder != null && holder.itemView != null) {
+-                holder.itemView.setActivated(isActivated);
+-            }
+-        }
+-    }
+-
+-    public Drawable getDrawable(Context context, String drawableName) {
+-        try {
+-            PackageManager pm = context.getPackageManager();
+-            Resources res = pm.getResourcesForApplication(mPkg);
+-            Context ctx = context.createPackageContext(
+-                    mPkg, Context.CONTEXT_IGNORE_SECURITY);
+-            return ctx.getDrawable(res.getIdentifier(drawableName, "drawable", mPkg));
+-        }
+-        catch (PackageManager.NameNotFoundException e) {
+-            e.printStackTrace();
+-        }
+-        return null;
+-    }
+-}
+-- 
+2.17.1
+
+
+From b0fa9eda9c2b56de309586ea6dcecd8f02bfe901 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Sun, 1 May 2022 19:02:01 +0000
+Subject: [PATCH 4/6] Sarasa Change
+
+---
+ res/values/cherish_strings.xml | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/res/values/cherish_strings.xml b/res/values/cherish_strings.xml
+index fd6a6ad..d27ad76 100644
+--- a/res/values/cherish_strings.xml
++++ b/res/values/cherish_strings.xml
+@@ -465,15 +465,16 @@
+     <string name="volume_steps_voice_call_title">Volume steps: Voice Call</string>
+     <string name="volume_steps_reset">Reset</string>
+ 
++        <!-- Udfps Haptic Feedback -->
++    <string name="udfps_haptic_feedback_title">FOD haptic feedback</string>
++    <string name="udfps_haptic_feedback_summary">Vibrate when touching FOD icon</string>
++
+     <!-- Privacy indicators -->
+     <string name="mic_camera_privacy_indicator_title">Mic and camera privacy indicator</string>
+     <string name="mic_camera_privacy_indicator_summary">Show separate indicator when an any app uses mic or camera</string>
+     <string name="location_privacy_indicator_title">Location privacy indicator</string>
+     <string name="location_privacy_indicator_summary">Show separate indicator when an any app uses location</string>
+ 
+-    <!-- Location privacy indicator -->
+-    <string name="location_privacy_indicator_title">Show privacy indicator for location</string>
+-	
+ 	<!-- Sb Icon Style -->
+     <string name="statusbar_icons_style">Colored Statusbar Icons</string>
+     <string name="statusbar_icons_style_summary">Choose the style of your statusbar icons (requires SystemUI restart)</string>
+-- 
+2.17.1
+
+
+From d4b13e78c94d138da49c13e058d9c4b37faf82e8 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Sun, 1 May 2022 19:03:54 +0000
+Subject: [PATCH 5/6] sarasa
+
+---
+ res/values/cherish_strings.xml | 4 ----
+ 1 file changed, 4 deletions(-)
+
+diff --git a/res/values/cherish_strings.xml b/res/values/cherish_strings.xml
+index d27ad76..9cdc3e5 100644
+--- a/res/values/cherish_strings.xml
++++ b/res/values/cherish_strings.xml
+@@ -465,10 +465,6 @@
+     <string name="volume_steps_voice_call_title">Volume steps: Voice Call</string>
+     <string name="volume_steps_reset">Reset</string>
+ 
+-        <!-- Udfps Haptic Feedback -->
+-    <string name="udfps_haptic_feedback_title">FOD haptic feedback</string>
+-    <string name="udfps_haptic_feedback_summary">Vibrate when touching FOD icon</string>
+-
+     <!-- Privacy indicators -->
+     <string name="mic_camera_privacy_indicator_title">Mic and camera privacy indicator</string>
+     <string name="mic_camera_privacy_indicator_summary">Show separate indicator when an any app uses mic or camera</string>
+-- 
+2.17.1
+
+
+From 2979806f04161df9ca6f4b0a998a22fca028fb76 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Sun, 1 May 2022 19:06:20 +0000
+Subject: [PATCH 6/6] Revert "Cherish: Allow toggling screen off FOD [2/2]"
+
+This reverts commit 4be12dabd372605a293b05c9b9d9ec397c477203.
+---
+ res/values/cherish_strings.xml          | 4 ----
+ res/xml/cherish_settings_lockscreen.xml | 7 +------
+ 2 files changed, 1 insertion(+), 10 deletions(-)
+
+diff --git a/res/values/cherish_strings.xml b/res/values/cherish_strings.xml
+index 9cdc3e5..4a20cd2 100644
+--- a/res/values/cherish_strings.xml
++++ b/res/values/cherish_strings.xml
+@@ -448,10 +448,6 @@
+ 	<!-- Ambient Ticker -->
+     <string name="pulse_on_new_tracks_title">Music ticker</string>
+     <string name="pulse_on_new_tracks_summary">Show music ticker on Ambient Display during track change</string>
+-	
+-	<!-- Screen off FOD -->
+-    <string name="screen_off_fod_title">Screen off FOD</string>
+-    <string name="screen_off_fod_summary">Keep FOD enabled when the screen is off</string>
+ 
+ 	<!-- Volume Steps Fragment -->
+     <string name="volume_steps_fragment_title">Volume steps</string>
+diff --git a/res/xml/cherish_settings_lockscreen.xml b/res/xml/cherish_settings_lockscreen.xml
+index 9c90527..5f7c741 100644
+--- a/res/xml/cherish_settings_lockscreen.xml
++++ b/res/xml/cherish_settings_lockscreen.xml
+@@ -84,10 +84,5 @@
+             android:summary="@string/ls_shortcut_summary" />
+ 
+     </PreferenceCategory> -->
+-	
+-	<com.cherish.settings.preferences.SystemSettingSwitchPreference
+-            android:key="screen_off_fod"
+-            android:title="@string/screen_off_fod_title"
+-            android:summary="@string/screen_off_fod_summary"
+-            android:defaultValue="true" />
++
+ </PreferenceScreen>
+-- 
+2.17.1
+

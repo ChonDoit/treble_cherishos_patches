@@ -1,0 +1,46 @@
+From 9430d5219c296989d695b4bad6333d63781d542d Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Wed, 27 Apr 2022 03:05:49 +0000
+Subject: [PATCH] Revert "Add show|hide udfps view callbacks to
+ IBiometricsFingerprint@2.3 [2/2]"
+
+This reverts commit 6e3bcbe2beb9a750fb4de8bfb325e24a9d1e9e8a.
+---
+ biometrics/fingerprint/2.3/IBiometricsFingerprint.hal | 10 ----------
+ current.txt                                           |  3 ---
+ 2 files changed, 13 deletions(-)
+
+diff --git a/biometrics/fingerprint/2.3/IBiometricsFingerprint.hal b/biometrics/fingerprint/2.3/IBiometricsFingerprint.hal
+index 3f44a1cdd..378b56453 100644
+--- a/biometrics/fingerprint/2.3/IBiometricsFingerprint.hal
++++ b/biometrics/fingerprint/2.3/IBiometricsFingerprint.hal
+@@ -67,14 +67,4 @@ interface IBiometricsFingerprint extends @2.2::IBiometricsFingerprint {
+      * previously caused a "finger down" event will be reported.
+      */
+     onFingerUp();
+-
+-    /**
+-     * Called when an Udfps overlay is shown
+-     */
+-    onShowUdfpsOverlay();
+-
+-    /**
+-     * Called when an Udfps overlay is hidden
+-     */
+-    onHideUdfpsOverlay();
+ };
+diff --git a/current.txt b/current.txt
+index 6e507add3..2373c391d 100644
+--- a/current.txt
++++ b/current.txt
+@@ -904,7 +904,4 @@ c8a57364f6ad20842be14f4db284df5304f7521ca8eac6bcc1fa6c5b466fb8a6 android.hardwar
+ # HALs released in Android SCv2
+ 77f6fcf3fd0dd3e424d8a0292094ebd17e4c35454bb9abbd3a6cbed1aba70765 android.hardware.camera.metadata@3.7::types
+ 
+-# Modified
+-34e9846b11f31baa5fdb0276ff6b5e22d256e65728ec5340fc57847619088294 android.hardware.biometrics.fingerprint@2.3::IBiometricsFingerprint
+-
+ # There should be no more HIDL HALs - please use AIDL instead.
+-- 
+2.17.0
+

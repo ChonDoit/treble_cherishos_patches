@@ -1,0 +1,40 @@
+From efb2f041175836a16b1082812c23f093842a9552 Mon Sep 17 00:00:00 2001
+From: SamarV-121 <samarvispute121@gmail.com>
+Date: Thu, 15 Jul 2021 23:16:29 +0530
+Subject: [PATCH] Allow hwc HAL to read hwc.exynos.vsync_mode prop
+
+`W composer@2.1-se: type=1400 audit(0.0:23509): avc: denied { read } for name="u:object_r:default_prop:s0" dev="tmpfs" ino=2518 scontext=u:r:hal_graphics_composer_default:s0 tcontext=u:object_r:default_prop:s0 tclass=file permissive=0`
+`E libc    : Access denied finding property "hwc.exynos.vsync_mode"`
+
+Change-Id: Ib259886ae5560dc3b2e427890e46877c732ff7ba
+Signed-off-by: SamarV-121 <samarvispute121@gmail.com>
+---
+ sepolicy/property_contexts | 2 ++
+ sepolicy/samsung.te        | 5 +++++
+ 2 files changed, 7 insertions(+)
+ create mode 100644 sepolicy/property_contexts
+
+diff --git a/sepolicy/property_contexts b/sepolicy/property_contexts
+new file mode 100644
+index 0000000..9902145
+--- /dev/null
++++ b/sepolicy/property_contexts
+@@ -0,0 +1,2 @@
++# Hwc
++hwc.exynos.vsync_mode      u:object_r:vendor_hwc_prop:s0
+diff --git a/sepolicy/samsung.te b/sepolicy/samsung.te
+index 63f4edc..4bb1965 100644
+--- a/sepolicy/samsung.te
++++ b/sepolicy/samsung.te
+@@ -2,3 +2,8 @@ type boot_prop, property_type;
+ 
+ set_prop(system_server, boot_prop);
+ 
++type hal_graphics_composer_default, domain;
++
++type vendor_hwc_prop, property_type;
++
++get_prop(hal_graphics_composer_default, vendor_hwc_prop);
+-- 
+2.32.0
+

@@ -1,0 +1,33 @@
+From 1683ce554ab84cce1dff869e61d2c2cae14613e6 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Wed, 16 Feb 2022 01:03:40 +0000
+Subject: [PATCH] Fix Offline Charge
+
+---
+ rootdir/init.rc | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/rootdir/init.rc b/rootdir/init.rc
+index fd78fce05..e872e34e5 100644
+--- a/rootdir/init.rc
++++ b/rootdir/init.rc
+@@ -11,11 +11,13 @@ import /vendor/etc/init/hw/init.${ro.hardware}.rc
+ import /system/etc/init/hw/init.usb.configfs.rc
+ import /system/etc/init/hw/init.${ro.zygote}.rc
+ 
+-service charger /bin/charger
++service charger /bin/charger
+     class charger
+     user system
+-    group system shell input graphics wakelock
+-    
++    group system shell graphics input wakelock
++    capabilities SYS_BOOT
++    seclabel u:r:charger:s0
++   
+ on boot
+     chown system system /sys/class/power_supply/batery/input_suspend
+     chmod 0777 /sys/class/power_supply/batery/input_suspend
+-- 
+2.17.1
+
