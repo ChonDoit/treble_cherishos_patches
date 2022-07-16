@@ -1,37 +1,17 @@
-From 8ecc29edf67d3943781230e3af4baa54ea9d92d7 Mon Sep 17 00:00:00 2001
+From 89bae248aa7b6964c13172fd3106f3f447e2af18 Mon Sep 17 00:00:00 2001
 From: ChonDoit <thphantomblog@gmail.com>
-Date: Sat, 11 Jun 2022 16:01:02 +0000
-Subject: [PATCH] Rework Securize and Netflix Props
+Date: Tue, 12 Jul 2022 01:34:25 +0000
+Subject: [PATCH] Adapt Securize due PixelPropUtils
 
 ---
- phh-securize.sh |   3 +-
- rw-system.sh    | 152 +++++++++++++++++++++++++++---------------------
- 2 files changed, 87 insertions(+), 68 deletions(-)
+ rw-system.sh | 122 ++++++++++++++++++++++++++-------------------------
+ 1 file changed, 63 insertions(+), 59 deletions(-)
 
-diff --git a/phh-securize.sh b/phh-securize.sh
-index 80b46d7..26b63f7 100644
---- a/phh-securize.sh
-+++ b/phh-securize.sh
-@@ -24,12 +24,13 @@ done
- mount -o remount,rw $MOUNTPOINT
- remount
- 
-+sed -i '/phhroot/,$d' $SYSTEM/bin/phh-prop-handler.sh
- touch $SYSTEM/phh/secure
- rm $SYSTEM/xbin/su
- rm $SYSTEM/bin/phh-su
- rm $SYSTEM/etc/init/su.rc
- rm $SYSTEM/bin/phh-securize.sh
--rm -Rf $SYSTEM/{app,priv-app}/me.phh.superuser/
-+rm -Rf $SYSTEM/priv-app/SuperUser
- rm -Rf /data/su || true
- mount -o remount,ro $MOUNTPOINT
- sync
 diff --git a/rw-system.sh b/rw-system.sh
-index 46571cd..73cfaad 100644
+index 3a17730..5fb3677 100644
 --- a/rw-system.sh
 +++ b/rw-system.sh
-@@ -716,66 +716,70 @@ copyprop() {
+@@ -724,66 +724,70 @@ copyprop() {
          resetprop_phh "$1" "$(getprop "$2")"
      fi
  }
@@ -88,11 +68,11 @@ index 46571cd..73cfaad 100644
 -    mkdir /mnt/phh/xbin
 -    chmod 0755 /mnt/phh/xbin
 -    chcon u:object_r:system_file:s0 /mnt/phh/xbin
- 
+-
 -    #phh-su will bind over this empty file to make a real su
 -    touch /mnt/phh/xbin/su
 -    chcon u:object_r:system_file:s0 /mnt/phh/xbin/su
--
+ 
 -    mount -o bind /mnt/phh/xbin /system/xbin
 -fi
 +# API 27
@@ -161,47 +141,6 @@ index 46571cd..73cfaad 100644
  
  for abi in "" 64;do
      f=/vendor/lib$abi/libstagefright_foundation.so
-@@ -967,18 +971,32 @@ fi
- 
- resetprop_phh ro.bluetooth.library_name libbluetooth.so
- 
--if getprop ro.vendor.build.fingerprint |grep -iq xiaomi/cepheus -e xiaomi/nabu;then
--    setprop ro.netflix.bsp_rev Q855-16947-1
-+board="$(getprop ro.board.platform)"
-+
-+if [ "$board" = atoll ] || [ "$board" = sm6250 ];then
-+	setprop ro.netflix.bsp_rev Q6250-19132-1
-+fi
-+
-+if [ "$board" = msmnile ];then
-+	setprop ro.netflix.bsp_rev Q855-16947-1
-+fi
-+
-+if [ "$board" = sm6150 ];then
-+	setprop ro.netflix.bsp_rev Q6150-17263-1
-+fi
-+
-+if [ "$board" = mt6768 ];then
-+	setprop ro.netflix.bsp_rev MTK6768-19055-1
- fi
- 
--if getprop ro.vendor.build.fingerprint |grep -qi redmi/curtana;then
--    setprop ro.netflix.bsp_rev Q6250-19132-1
-+if [ "$board" = lahaina ];then
-+	setprop ro.netflix.bsp_rev Q875-32774-1
-+	resetprop_phh ro.config.media_vol_steps 25
-+	resetprop_phh ro.config.media_vol_default 15
- fi
- 
--if getprop ro.vendor.build.fingerprint |grep -iq xiaomi/renoir;then
--    setprop ro.netflix.bsp_rev Q875-32774-1
--    resetprop_phh ro.config.media_vol_steps 25
--    resetprop_phh ro.config.media_vol_default 15
-+if [ "$board" = universal8825 ];then
-+	setprop ro.netflix.bsp_rev EXYNOS1280-34993-1
- fi
- 
- # Set props for Vsmart Live's fod
 -- 
 2.17.1
 

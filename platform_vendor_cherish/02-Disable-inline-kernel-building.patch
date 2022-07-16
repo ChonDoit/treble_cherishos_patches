@@ -1,0 +1,44 @@
+From 3825c50971a82caf1efeecac6599bc7d98e70d67 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Tue, 12 Jul 2022 02:00:27 +0000
+Subject: [PATCH] build: Disable inline kernel building
+
+---
+ build/tasks/kernel.mk | 2 ++
+ config/common.mk      | 2 ++
+ 2 files changed, 4 insertions(+)
+
+diff --git a/build/tasks/kernel.mk b/build/tasks/kernel.mk
+index 0520fc46..141769e3 100644
+--- a/build/tasks/kernel.mk
++++ b/build/tasks/kernel.mk
+@@ -72,6 +72,7 @@
+ #                                          modules in vendor_overlay instead of vendor
+ 
+ ifneq ($(TARGET_NO_KERNEL),true)
++ifneq ($(TARGET_NO_KERNEL_OVERRIDE),true)
+ 
+ ## Externally influenced variables
+ KERNEL_SRC := $(TARGET_KERNEL_SOURCE)
+@@ -563,4 +564,5 @@ dtboimage: $(INSTALLED_DTBOIMAGE_TARGET)
+ .PHONY: dtbimage
+ dtbimage: $(INSTALLED_DTBIMAGE_TARGET)
+ 
++endif # TARGET_NO_KERNEL_OVERRIDE
+ endif # TARGET_NO_KERNEL
+diff --git a/config/common.mk b/config/common.mk
+index 5e5c0c56..3e26feb9 100644
+--- a/config/common.mk
++++ b/config/common.mk
+@@ -1,6 +1,8 @@
+ # Main version
+ $(call inherit-product, vendor/cherish/config/main_version.mk)
+ 
++TARGET_NO_KERNEL_OVERRIDE := true
++
+ PRODUCT_BRAND ?= CherishOS
+ 
+ PRODUCT_BUILD_PROP_OVERRIDES += BUILD_UTC_DATE=0
+-- 
+2.17.1
+

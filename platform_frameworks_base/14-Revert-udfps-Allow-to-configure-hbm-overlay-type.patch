@@ -1,0 +1,52 @@
+From fd76eb193beac08df1fab81d371c2e8f8d8bea2b Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Tue, 12 Jul 2022 00:05:29 +0000
+Subject: [PATCH] Revert "udfps: Allow to configure hbm overlay type"
+
+This reverts commit dcc5433749174a612b5dfb66ef4f204ad6f0b757.
+---
+ packages/SystemUI/res/values/cherish_config.xml             | 6 ------
+ .../src/com/android/systemui/biometrics/UdfpsView.java      | 3 +--
+ 2 files changed, 1 insertion(+), 8 deletions(-)
+
+diff --git a/packages/SystemUI/res/values/cherish_config.xml b/packages/SystemUI/res/values/cherish_config.xml
+index ff3b085ec2b6..52f1b71093a6 100644
+--- a/packages/SystemUI/res/values/cherish_config.xml
++++ b/packages/SystemUI/res/values/cherish_config.xml
+@@ -6,12 +6,6 @@
+     <!-- Color of the UDFPS pressed view -->
+     <color name="config_udfpsColor">#ffffffff</color>
+ 
+-    <!-- HBM type of UDFPS overlay.
+-            0 - GLOBAL HBM
+-            1 - LOCAL HBM
+-    -->
+-    <integer name="config_udfps_hbm_type">1</integer>
+-
+     <!-- If not zero, limits the internal screen recorder's framerate to the set value. -->
+     <integer name="config_screenRecorderMaxFramerate">0</integer>
+ 
+diff --git a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsView.java b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsView.java
+index 11f85f8eb9a5..6d31ef0e7701 100644
+--- a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsView.java
++++ b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsView.java
+@@ -51,7 +51,7 @@ public class UdfpsView extends FrameLayout implements DozeReceiver, UdfpsIllumin
+ 
+     private static final String SETTING_HBM_TYPE =
+             "com.android.systemui.biometrics.UdfpsSurfaceView.hbmType";
+-    private static @HbmType int DEFAULT_HBM_TYPE;
++    private static final @HbmType int DEFAULT_HBM_TYPE = UdfpsHbmTypes.LOCAL_HBM;
+ 
+     private static final int DEBUG_TEXT_SIZE_PX = 32;
+ 
+@@ -97,7 +97,6 @@ public class UdfpsView extends FrameLayout implements DozeReceiver, UdfpsIllumin
+         mOnIlluminatedDelayMs = mContext.getResources().getInteger(
+                 com.android.internal.R.integer.config_udfps_illumination_transition_ms);
+ 
+-        DEFAULT_HBM_TYPE = mContext.getResources().getInteger(R.integer.config_udfps_hbm_type);
+         if (Build.IS_ENG || Build.IS_USERDEBUG) {
+             mHbmType = Settings.Secure.getIntForUser(mContext.getContentResolver(),
+                     SETTING_HBM_TYPE, DEFAULT_HBM_TYPE, UserHandle.USER_CURRENT);
+-- 
+2.17.1
+

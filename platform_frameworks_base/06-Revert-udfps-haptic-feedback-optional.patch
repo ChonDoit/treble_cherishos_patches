@@ -1,0 +1,47 @@
+From a06891cdfb471b7225eb2f68fcc1cf0c435029c5 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Mon, 11 Jul 2022 23:35:07 +0000
+Subject: [PATCH] Revert "Make Udfps haptic feedback optional [1/2]"
+
+This reverts commit ec26cf87a4bb1691daee5421a2f08d891469ebcc.
+---
+ core/java/android/provider/Settings.java                   | 7 -------
+ .../com/android/systemui/biometrics/UdfpsController.java   | 4 +---
+ 2 files changed, 1 insertion(+), 10 deletions(-)
+
+diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
+index 570b81f3cbc8..b5bf24785e11 100644
+--- a/core/java/android/provider/Settings.java
++++ b/core/java/android/provider/Settings.java
+@@ -6213,13 +6213,6 @@ public final class Settings {
+          */
+         public static final String UDFPS_ANIM = "udfps_anim";
+ 
+-        /**
+-
+-         * Whether to play haptic feedback when touching udfps icon
+-         * @hide
+-         */
+-        public static final String UDFPS_HAPTIC_FEEDBACK = "udfps_haptic_feedback";
+-
+         /**
+          * @hide
+          */
+diff --git a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
+index 644b2f378eeb..32c84c7ac54e 100644
+--- a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
++++ b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
+@@ -713,9 +713,7 @@ public class UdfpsController implements DozeReceiver, UdfpsHbmProvider {
+      */
+     @VisibleForTesting
+     public void playStartHaptic() {
+-        boolean vibrate = Settings.System.getInt(mContext.getContentResolver(),
+-                Settings.System.UDFPS_HAPTIC_FEEDBACK, 1) == 1;
+-        if (mVibrator != null && vibrate) {
++        if (mVibrator != null) {
+             mVibrator.vibrate(
+                     Process.myUid(),
+                     mContext.getOpPackageName(),
+-- 
+2.17.1
+

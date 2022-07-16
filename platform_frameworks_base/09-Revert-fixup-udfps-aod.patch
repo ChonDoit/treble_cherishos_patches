@@ -1,0 +1,27 @@
+From e63e3266a04c07e7bc8d1a68d9c3259ed39213d6 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Mon, 11 Jul 2022 23:58:42 +0000
+Subject: [PATCH] Revert "fix-up:udfps: Add support for udfps on aod without
+ having dedicated sensor"
+
+This reverts commit f73fc3b0499abe15dc5e9794a5ca9cdd5890bc9f.
+---
+ .../fingerprint/hidl/FingerprintAuthenticationClient.java       | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintAuthenticationClient.java b/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintAuthenticationClient.java
+index c2d2e813cc1e..eb9b3118b9df 100644
+--- a/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintAuthenticationClient.java
++++ b/services/core/java/com/android/server/biometrics/sensors/fingerprint/hidl/FingerprintAuthenticationClient.java
+@@ -105,7 +105,7 @@ class FingerprintAuthenticationClient extends AuthenticationClient<IBiometricsFi
+     public void onAcquired(int acquiredInfo, int vendorCode) {
+         super.onAcquired(acquiredInfo, vendorCode);
+         try {
+-            mSensorOverlays.ifUdfps(controller -> controller.onAcquired(getSensorId(), acquiredInfo, vendorCode));
++            mUdfpsOverlayController.onAcquired(getSensorId(), acquiredInfo, vendorCode);
+         } catch (Exception e) {
+         }
+     }
+-- 
+2.17.1
+

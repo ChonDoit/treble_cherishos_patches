@@ -1,0 +1,89 @@
+From 76fa724c23b0a522dfbddd8fa5a97eb709f9ffc5 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Tue, 12 Jul 2022 00:01:25 +0000
+Subject: [PATCH] Revert "udfps: Allow devices to pulse onFingerDown instead of
+ waking the screen"
+
+This reverts commit 69eb06b9fd8f4061ecb70e267506bfd90f950d02.
+---
+ core/java/android/provider/Settings.java              |  3 ---
+ packages/SystemUI/res/values/cherish_config.xml       |  4 ----
+ .../android/systemui/biometrics/UdfpsController.java  | 11 ++---------
+ 3 files changed, 2 insertions(+), 16 deletions(-)
+
+diff --git a/core/java/android/provider/Settings.java b/core/java/android/provider/Settings.java
+index 5c23cb501074..d3a46cdb22b3 100644
+--- a/core/java/android/provider/Settings.java
++++ b/core/java/android/provider/Settings.java
+@@ -6506,17 +6506,14 @@ public final class Settings {
+          * Whether to take partial screenshot with volume down + power click.
+          * @hide
+          */
+-<<<<<<< HEAD
+         public static final String CLICK_PARTIAL_SCREENSHOT = "click_partial_screenshot";
+ 
+         /**
+          * @hide
+          */
+         public static final String QS_TRANSPARENCY = "qs_transparency";
+-=======
+         @Readable
+         public static final String ENABLE_FLOATING_ROTATION_BUTTON = "enable_floating_rotation_button";
+->>>>>>> parent of 73259ff4ac97... SystemUI: allow toggling screen off fod[1/2]
+ 
+         /**
+          * These are all public system settings
+diff --git a/packages/SystemUI/res/values/cherish_config.xml b/packages/SystemUI/res/values/cherish_config.xml
+index c883af2d3ff0..abcf02965bb5 100644
+--- a/packages/SystemUI/res/values/cherish_config.xml
++++ b/packages/SystemUI/res/values/cherish_config.xml
+@@ -15,10 +15,6 @@
+     <!-- Udfps vendor code -->
+     <integer name="config_udfps_vendor_code">0</integer>
+ 
+-    <!-- Whether to pulse onFingerDown actions instead
+-        of waking the screen while the screen is off or in lpm. -->
+-    <bool name="config_pulseOnFingerDown">false</bool>
+-
+     <!-- If not zero, limits the internal screen recorder's framerate to the set value. -->
+     <integer name="config_screenRecorderMaxFramerate">0</integer>
+ 
+diff --git a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
+index a938f8cedde5..3d0ee52bf08f 100644
+--- a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
++++ b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
+@@ -47,7 +47,6 @@ import android.os.RemoteException;
+ import android.os.Trace;
+ import android.os.VibrationEffect;
+ import android.os.Vibrator;
+-import android.os.UserHandle;
+ import android.util.Log;
+ import android.view.Gravity;
+ import android.view.LayoutInflater;
+@@ -104,7 +103,6 @@ import kotlin.Unit;
+ @SysUISingleton
+ public class UdfpsController implements DozeReceiver, UdfpsHbmProvider {
+     private static final String TAG = "UdfpsController";
+-    private static final String PULSE_ACTION = "com.android.systemui.doze.pulse";
+     private static final long AOD_INTERRUPT_TIMEOUT_MILLIS = 1000;
+     private static final long DEFAULT_VIBRATION_DURATION = 1000; // milliseconds
+ 
+@@ -331,13 +329,8 @@ public class UdfpsController implements DozeReceiver, UdfpsHbmProvider {
+             mFgExecutor.execute(() -> {
+                 if (acquiredInfo == 6 && (mStatusBarStateController.isDozing() || !mScreenOn)) {
+                     if (vendorCode == mUdfpsVendorCode) {
+-                        if (mContext.getResources().getBoolean(R.bool.config_pulseOnFingerDown)) {
+-                            mContext.sendBroadcastAsUser(new Intent(PULSE_ACTION),
+-                                    new UserHandle(UserHandle.USER_CURRENT));
+-                        } else {
+-                            mPowerManager.wakeUp(mSystemClock.uptimeMillis(),
+-                                    PowerManager.WAKE_REASON_GESTURE, TAG);
+-                        }
++                        mPowerManager.wakeUp(mSystemClock.uptimeMillis(),
++                                PowerManager.WAKE_REASON_GESTURE, TAG);
+                         onAodInterrupt(0, 0, 0, 0); // To-Do pass proper values
+                     }
+                 }
+-- 
+2.17.1
+
