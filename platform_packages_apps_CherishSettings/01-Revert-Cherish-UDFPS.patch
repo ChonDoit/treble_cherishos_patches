@@ -1075,7 +1075,7 @@ index b155a61..0000000
 From b0fa9eda9c2b56de309586ea6dcecd8f02bfe901 Mon Sep 17 00:00:00 2001
 From: ChonDoit <thphantomblog@gmail.com>
 Date: Sun, 1 May 2022 19:02:01 +0000
-Subject: [PATCH 4/6] Sarasa Change
+Subject: [PATCH 4/6] fixup!
 
 ---
  res/values/cherish_strings.xml | 7 ++++---
@@ -1112,7 +1112,7 @@ index fd6a6ad..d27ad76 100644
 From d4b13e78c94d138da49c13e058d9c4b37faf82e8 Mon Sep 17 00:00:00 2001
 From: ChonDoit <thphantomblog@gmail.com>
 Date: Sun, 1 May 2022 19:03:54 +0000
-Subject: [PATCH 5/6] sarasa
+Subject: [PATCH 5/6] fix fixup!
 
 ---
  res/values/cherish_strings.xml | 4 ----
