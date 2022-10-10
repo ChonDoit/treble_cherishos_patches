@@ -1,0 +1,40 @@
+From fa210350fdb97fd06205f0d5d9bba8cd452bce2c Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Mon, 10 Oct 2022 05:08:58 +0000
+Subject: [PATCH] Add CCache Check to Environment Setup
+
+---
+ build/envsetup.sh | 18 ++++++++++++++++++
+ 1 file changed, 18 insertions(+)
+
+diff --git a/build/envsetup.sh b/build/envsetup.sh
+index b4b68540..140486a3 100644
+--- a/build/envsetup.sh
++++ b/build/envsetup.sh
+@@ -670,5 +670,23 @@ function fixup_common_out_dir() {
+         mkdir -p ${common_out_dir}
+     fi
+ }
++
++# Check and set ccache path on envsetup
++if [ -z ${CCACHE_EXEC} ]; then
++	ccache_path=$(which ccache)
++	if [ ! -z "$ccache_path" ]; then
++		mkdir /mnt/ccache
++		mount --bind ~/.ccache /mnt/ccache
++		export USE_CCACHE=1
++		export CCACHE_COMPRESS=1
++		export CCACHE_EXEC=/usr/bin/ccache
++		export CCACHE_DIR=/mnt/ccache
++		ccache -M 50G -F 0
++		echo "ccache found and CCACHE_EXEC has been set to : $ccache_path"
++	else
++		echo "ccache not found/installed!"
++	fi
++fi
++
+ # Disable ABI checking
+ export SKIP_ABI_CHECKS=true
+-- 
+2.34.1
+

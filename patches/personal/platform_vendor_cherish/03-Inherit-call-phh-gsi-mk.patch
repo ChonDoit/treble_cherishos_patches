@@ -1,0 +1,26 @@
+From 5374b0f9b33b5d47ce7b6f06771ee70dffe5a14a Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Mon, 10 Oct 2022 05:10:11 +0000
+Subject: [PATCH] Inherit call phh_gsi.mk
+
+---
+ config/common.mk | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/config/common.mk b/config/common.mk
+index f0a7eed0..dfddafb5 100644
+--- a/config/common.mk
++++ b/config/common.mk
+@@ -1,6 +1,9 @@
+ # Main version
+ $(call inherit-product, vendor/cherish/config/main_version.mk)
+ 
++# PHH GSI
++$(call inherit-product, vendor/superior/config/phh_gsi.mk)
++
+ PRODUCT_BRAND ?= CherishOS
+ 
+ PRODUCT_BUILD_PROP_OVERRIDES += BUILD_UTC_DATE=0
+-- 
+2.34.1
+
