@@ -4,36 +4,38 @@ Date: Mon, 10 Oct 2022 05:13:04 +0000
 Subject: [PATCH] Add own build changes
 
 ---
- config/phh_gsi.mk | 24 ++++++++++++++++++++++++
- 1 file changed, 24 insertions(+)
+ config/phh_gsi.mk | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
  create mode 100644 config/phh_gsi.mk
 
 diff --git a/config/phh_gsi.mk b/config/phh_gsi.mk
 new file mode 100644
-index 00000000..47b49087
+index 00000000..82e18ddf
 --- /dev/null
 +++ b/config/phh_gsi.mk
-@@ -0,0 +1,24 @@
+@@ -0,0 +1,26 @@
 +# The Gapps
 +$(call inherit-product, vendor/gapps/config.mk)
 +
 +# Own Gapps Flags
 +WITH_FULL_THEGAPPS := true
 +
-+# No Inline Build Kernel
++# Don't Build Kernel
 +TARGET_NO_KERNEL := true
 +
 +# Set Bootanimationn at 720P
 +TARGET_BOOT_ANIMATION_RES := 720
 +
-+# Sharee Block (RO)
++# Shared Block (RO)
 +BOARD_EXT4_SHARE_DUP_BLOCKS := false
 +
 +# Use CCache
 +USE_CCACHE := true
 +
-+PRODUCT_PRODUCT_PROPERTIES += \
-+        dalvik.vm.dex2oat64.enabled=true
++PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
++	persist.sys.binary_xml=false \
++	ro.cherish.maintainer=ChonDoe \
++	dalvik.vm.dex2oat64.enabled=true
 +
 +# APNS
 +PRODUCT_COPY_FILES += \
