@@ -1,0 +1,59 @@
+From 196fcb7ce8efd2539e6d6a4c655c1c6c953f92b0 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Mon, 14 Nov 2022 15:06:05 +0000
+Subject: [PATCH 4/5] Misc vhanges to common.mk
+
+Build everything on PREOPT leads to insane big images
+Remove duplicated ro.adb.secure
+Alredy have lily_experience on gapps
+
+---
+ config/common.mk | 18 +-----------------
+ 1 file changed, 1 insertion(+), 17 deletions(-)
+
+diff --git a/config/common.mk b/config/common.mk
+index 997a80ec..f520a63e 100644
+--- a/config/common.mk
++++ b/config/common.mk
+@@ -21,7 +21,7 @@ endif
+ 
+ # ART
+ # Optimize everything for preopt
+-PRODUCT_DEX_PREOPT_DEFAULT_COMPILER_FILTER := everything
++PRODUCT_DEX_PREOPT_DEFAULT_COMPILER_FILTER := speed-profile
+ # Don't preopt prebuilts
+ DONT_DEXPREOPT_PREBUILTS := true
+ 
+@@ -46,18 +46,6 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+     ro.com.android.dateformat=MM-dd-yyyy \
+     persist.sys.disable_rescue=true
+ 
+-ifeq ($(TARGET_BUILD_VARIANT),eng)
+-# Disable ADB authentication
+-PRODUCT_SYSTEM_DEFAULT_PROPERTIES += ro.adb.secure=0
+-else
+-# Enable ADB authentication
+-PRODUCT_SYSTEM_DEFAULT_PROPERTIES += ro.adb.secure=1
+-
+-# Disable extra StrictMode features on all non-engineering builds
+-PRODUCT_SYSTEM_DEFAULT_PROPERTIES += persist.sys.strictmode.disable=true
+-endif
+-
+-
+ # Enable WiFi Display
+ PRODUCT_PROPERTY_OVERRIDES += \
+     persist.sys.wfd.nohdcp=1 \
+@@ -113,10 +101,6 @@ PRODUCT_COPY_FILES += \
+ PRODUCT_COPY_FILES += \
+     frameworks/base/data/keyboards/Vendor_045e_Product_028e.kl:$(TARGET_COPY_OUT_PRODUCT)/usr/keylayout/Vendor_045e_Product_0719.kl
+ 
+-# Enable Google LILY_EXPERIENCE feature
+-PRODUCT_COPY_FILES += \
+-    vendor/cherish/target/config/permissions/lily_experience.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/sysconfig/lily_experience.xml
+-
+ # Enforce privapp-permissions whitelist
+ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+     ro.control_privapp_permissions=log
+-- 
+2.25.1
+
