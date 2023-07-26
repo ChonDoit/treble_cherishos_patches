@@ -1,26 +1,23 @@
 {
-    "version": "v20221112",
-    "date": "1668269804",
-    "variants": [
-        {
-            "name": "treble_arm64_bgS-slim",
-            "size": 3174531072,
-            "url": "https://xiaomemeindex.com/system.img.xz"
-        }
-        {
-            "name": "treble_arm64_bgN-slim-lite",
-            "size": 3088470016,
-            "url": "https://xiaomemeindex.com/system.img.xz"
-        }
-        {
-            "name": "treble_arm64_bgN",
-            "size": 3179151360,
-            "url": "https://xiaomemeindex.com/system.img.xz"
-        }
-        {
-            "name": "treble_arm64_bgN-slim",
-            "size": 2557145088,
-            "url": "https://xiaomemeindex.com/system.img.xz"
-        }
-    ]
+  "version": "v20230725",
+  "date": "1690280815",
+  "gsi": "CherishOS | by ChonDoe feat. TD",
+  "changelog": "https://raw.githubusercontent.com/ChonDoit/treble_superior_patches/13/changelog.txt",
+  "variants": [
+    {
+      "name": "Slim",
+      "size": "1129927008",
+      "url": "https://github.com/ChonDoit/treble_cherishos_patches/releases/download/A13-v20230725/CherishOS_A13-arm64-bgS-slim_20230725.img.xz"
+    },
+    {
+      "name": "Slim-VNDK-Lite",
+      "size": "1074777112",
+      "url": "https://github.com/ChonDoit/treble_cherishos_patches/releases/download/A13-v20230725/CherishOS_A13-arm64-bgS-slim-lite_20230725.img.xz"
+    },
+    {
+      "name": "Slim-Secure",
+      "size": "980043636",
+      "url": "https://github.com/ChonDoit/treble_cherishos_patches/releases/download/A13-v20230725/CherishOS_A13-RO-arm64-bgN-slim_20230725.img.xz"
+    }
+  ]
 }

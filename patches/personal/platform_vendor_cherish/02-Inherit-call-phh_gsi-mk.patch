@@ -1,0 +1,81 @@
+From 56b5fc29f9b0c586b543602b7eaced5243d84d53 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Fri, 7 Oct 2022 17:52:31 +0000
+Subject: [PATCH] Inherit call phh_gsi.mk
+
+---
+ config/common.mk | 31 ++++++++++++-------------------
+ 1 file changed, 12 insertions(+), 19 deletions(-)
+
+diff --git a/config/common.mk b/config/common.mk
+index cf7b1354..7249e00f 100644
+--- a/config/common.mk
++++ b/config/common.mk
+@@ -3,6 +3,14 @@ $(call inherit-product, vendor/cherish/config/main_version.mk)
+ 
+ PRODUCT_BRAND ?= CherishOS
+ 
++CHERISH_VANILLA := true
++
++# PHH GSI
++$(call inherit-product, vendor/cherish/config/phh_gsi.mk)
++
++# Set Bootanimation at 720P
++TARGET_BOOT_ANIMATION_RES := 720
++
+ PRODUCT_BUILD_PROP_OVERRIDES += BUILD_UTC_DATE=0
+ 
+ ifeq ($(PRODUCT_GMS_CLIENTID_BASE),)
+@@ -23,15 +31,16 @@ endif
+ 
+ # ART
+ # Optimize everything for preopt
+-PRODUCT_DEX_PREOPT_DEFAULT_COMPILER_FILTER := everything
++PRODUCT_DEX_PREOPT_DEFAULT_COMPILER_FILTER := speed-profile
++
+ # Don't preopt prebuilts
+-DONT_DEXPREOPT_PREBUILTS := true
++# DONT_DEXPREOPT_PREBUILTS := true
+ 
+ PRODUCT_PROPERTY_OVERRIDES += \
+     pm.dexopt.boot=verify \
+     pm.dexopt.first-boot=quicken \
+     pm.dexopt.install=speed-profile \
+-    pm.dexopt.bg-dexopt=everything
++    pm.dexopt.bg-dexopt=speed-profile
+ 
+ ifneq ($(AB_OTA_PARTITIONS),)
+ PRODUCT_PROPERTY_OVERRIDES += \
+@@ -52,18 +61,6 @@ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+     ro.com.android.dateformat=MM-dd-yyyy \
+     persist.sys.disable_rescue=true
+ 
+-ifeq ($(TARGET_BUILD_VARIANT),eng)
+-# Disable ADB authentication
+-PRODUCT_SYSTEM_DEFAULT_PROPERTIES += ro.adb.secure=0
+-else
+-# Enable ADB authentication
+-PRODUCT_SYSTEM_DEFAULT_PROPERTIES += ro.adb.secure=1
+-
+-# Disable extra StrictMode features on all non-engineering builds
+-PRODUCT_SYSTEM_DEFAULT_PROPERTIES += persist.sys.strictmode.disable=true
+-endif
+-
+-
+ # Enable WiFi Display
+ PRODUCT_PROPERTY_OVERRIDES += \
+     persist.sys.wfd.nohdcp=1 \
+@@ -119,10 +116,6 @@ PRODUCT_COPY_FILES += \
+ PRODUCT_COPY_FILES += \
+     frameworks/base/data/keyboards/Vendor_045e_Product_028e.kl:$(TARGET_COPY_OUT_PRODUCT)/usr/keylayout/Vendor_045e_Product_0719.kl
+ 
+-# Enable Google LILY_EXPERIENCE feature
+-PRODUCT_COPY_FILES += \
+-    vendor/cherish/target/config/permissions/lily_experience.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/sysconfig/lily_experience.xml
+-
+ # Enforce privapp-permissions whitelist
+ PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
+     ro.control_privapp_permissions=log
+-- 
+2.34.1
+

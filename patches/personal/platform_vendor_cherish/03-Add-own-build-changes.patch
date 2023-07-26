@@ -1,0 +1,49 @@
+From db43824989681f79621649a65ea10c21df482400 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Sun, 2 Jul 2023 22:40:39 +0000
+Subject: [PATCH] Add own build changes
+
+---
+ config/phh_gsi.mk | 30 ++++++++++++++++++++++++++++++
+ 1 file changed, 30 insertions(+)
+ create mode 100644 config/phh_gsi.mk
+
+diff --git a/config/phh_gsi.mk b/config/phh_gsi.mk
+new file mode 100644
+index 00000000..152e814c
+--- /dev/null
++++ b/config/phh_gsi.mk
+@@ -0,0 +1,30 @@
++
++# The Gapps
++$(call inherit-product, vendor/gapps/config.mk)
++
++# Treble
++CHERISH_BUILD := Treble
++
++# Don't Build Kernel
++TARGET_NO_KERNEL := true
++
++# Secure build?
++PHH-SECURE_BUILD := true
++
++# Use CCache
++USE_CCACHE := true
++
++# Build APN
++PRODUCT_PACKAGES += apns-conf.xml
++
++# Set Build Variant prop for OTA
++ifeq ($(PHH-SECURE_BUILD), true)
++    PRODUCT_SYSTEM_DEFAULT_PROPERTIES += persist.sys.phh.buildvariant=Slim-Secure
++        else
++    PRODUCT_SYSTEM_DEFAULT_PROPERTIES += persist.sys.phh.buildvariant=Slim
++endif
++
++PRODUCT_SYSTEM_DEFAULT_PROPERTIES += \
++    persist.sys.binary_xml=false \
++    dalvik.vm.dex2oat64.enabled=true \
++    ro.system.ota.json_url=https://raw.githubusercontent.com/ChonDoit/treble_cherishos_patches/13/ota.json
+-- 
+2.34.1
+
