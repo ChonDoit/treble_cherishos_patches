@@ -10,7 +10,7 @@ Subject: [PATCH] Disable Generated Kernel Headers
  1 file changed, 11 deletions(-)
 
 diff --git a/build/soong/Android.bp b/build/soong/Android.bp
-index e5607e6d..764d7206 100644
+index bb9bc9d3..2bf814a7 100644
 --- a/build/soong/Android.bp
 +++ b/build/soong/Android.bp
 @@ -20,9 +20,6 @@ bootstrap_go_package {

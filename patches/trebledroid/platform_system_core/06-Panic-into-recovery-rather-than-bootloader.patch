@@ -1,12 +1,11 @@
-From 0231dc621f36bcf2c93d3325975047cd45c79a1b Mon Sep 17 00:00:00 2001
-From: Pierre-Hugues Husson <phh@phh.me>
-Date: Wed, 4 Sep 2019 21:11:48 +0200
-Subject: [PATCH 06/18] Panic into recovery rather than bootloader
+From 05b34b0b46339166a090ea3fca01af76bd6d472a Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Sat, 1 Oct 2022 02:59:59 +0000
+Subject: [PATCH] Panic into recovery rather than bootloader
 
 Getting last_kmsg/pstore from bootloader isn't possible for other people
 than the OEM, but we have TWRP to access last_kmsg/pstore
 
-Change-Id: If04bb6572dc66677d7b44f7d302b2d69ce526200
 ---
  init/reboot_utils.cpp | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

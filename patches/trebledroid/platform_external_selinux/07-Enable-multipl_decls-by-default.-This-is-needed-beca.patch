@@ -1,10 +1,9 @@
-From d79ea4efefc24741fcc9e664f4e7e5f3607b414d Mon Sep 17 00:00:00 2001
-From: Pierre-Hugues Husson <phh@phh.me>
-Date: Fri, 2 Mar 2018 22:49:55 +0100
-Subject: [PATCH 7/9] Enable multipl_decls by default. This is needed because
- 8.0 init doesn't add -m
+From 641e8bacdaa7eaefa219523c8f8903efbb7f4617 Mon Sep 17 00:00:00 2001
+From: ChonDoit <thphantomblog@gmail.com>
+Date: Thu, 29 Sep 2022 11:50:46 -0300
+Subject: [PATCH] Enable multipl_decls by default. This is needed because 8.0
+ init doesn't add -m
 
-Change-Id: I43dc661d519f7b8576d72a828d8cbd444592bf5e
 ---
  secilc/secilc.c | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)

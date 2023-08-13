@@ -1,2 +1,2 @@
-A13-v20230725
-| Sync with July Sources (QPR3)
+A13-v20230813
+| Sync with August Sources
