@@ -21,18 +21,18 @@ Change-Id: I2b0cede7f47eecd2124a386e958773289eb6f11c
  1 file changed, 10 insertions(+), 1 deletion(-)
 
 diff --git a/system/gd/hci/controller.cc b/system/gd/hci/controller.cc
-index a48222117a..9574b72a2f 100644
+index a48222117a..a7d83b0ca1 100644
 --- a/system/gd/hci/controller.cc
 +++ b/system/gd/hci/controller.cc
-@@ -492,7 +492,7 @@ struct Controller::impl {
-   void set_event_mask(uint64_t event_mask) {
-     std::unique_ptr<SetEventMaskBuilder> packet = SetEventMaskBuilder::Create(event_mask);
-     hci_->EnqueueCommand(std::move(packet), module_.GetHandler()->BindOnceOn(
--                                                this, &Controller::impl::check_status<SetEventMaskCompleteView>));
-+                                                this, &Controller::impl::check_event_mask_status<LeSetEventMaskCompleteView>));
+@@ -548,7 +548,7 @@ struct Controller::impl {
+   void le_set_event_mask(uint64_t le_event_mask) {
+     std::unique_ptr<LeSetEventMaskBuilder> packet = LeSetEventMaskBuilder::Create(le_event_mask);
+     hci_->EnqueueCommand(
+-        std::move(packet), module_.GetHandler()->BindOnceOn(this, &Controller::impl::check_le_set_event_mask_status));
++        std::move(packet), module_.GetHandler()->BindOnceOn(this, &Controller::impl::check_event_mask_status<LeSetEventMaskCompleteView>));
    }
  
-   void write_le_host_support(Enable enable, Enable deprecated_host_bit) {
+   void check_le_set_event_mask_status(CommandCompleteView view) {
 @@ -569,6 +569,15 @@ struct Controller::impl {
      ASSERT(status_view.GetStatus() == ErrorCode::SUCCESS);
    }

@@ -1,14 +1,23 @@
-From e99b4ad1cd44f00c7a8be67f7c3949212a731caf Mon Sep 17 00:00:00 2001
+From 91c9879453b526a61af9a4a78c9a0e5f0c216ca8 Mon Sep 17 00:00:00 2001
 From: ChonDoit <thphantomblog@gmail.com>
-Date: Thu, 27 Jul 2023 21:34:49 +0000
+Date: Wed, 23 Aug 2023 14:45:46 +0000
 Subject: [PATCH] Address a QcRilAudio denial
 
 07-27 14:17:12.726   547   547 I auditd  : avc:  denied  { find } for interface=vendor.qti.qcril.am::IQcRilAudio sid=u:r:system_app:s0 pid=3172 scontext=u:r:system_app:s0 tcontext=u:object_r:default_android_hwservice:s0 tclass=hwservice_manager permissive=0
 07-27 14:17:12.734   547   547 I auditd  : avc:  denied  { find } for interface=vendor.qti.qcril.am::IQcRilAudio sid=u:r:system_app:s0 pid=3172 scontext=u:r:system_app:s0 tcontext=u:object_r:default_android_hwservice:s0 tclass=hwservice_manager permissive=0
 ---
+ sepolicy/hwservice_contexts | 1 +
  sepolicy/qcrilam_app.te | 3 +++
- 1 file changed, 3 insertions(+)
+ 2 files changed, 4 insertions(+)
+ create mode 100644 sepolicy/hwservice_contexts
 
+diff --git a/sepolicy/hwservice_contexts b/sepolicy/hwservice_contexts
+new file mode 100644
+index 0000000..075b30e
+--- /dev/null
++++ b/sepolicy/hwservice_contexts
+@@ -0,0 +1 @@
++vendor.qti.qcril.am::IQcRilAudio             u:object_r:hal_telephony_hwservice:s0
 diff --git a/sepolicy/qcrilam_app.te b/sepolicy/qcrilam_app.te
 index 2b8e76e..025bea5 100644
 --- a/sepolicy/qcrilam_app.te

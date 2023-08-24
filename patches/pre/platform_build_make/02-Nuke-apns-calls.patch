@@ -1,7 +1,7 @@
 From ad928fddaca641d7bccfaa8755a0194c67c5e381 Mon Sep 17 00:00:00 2001
 From: ChonDoit <thphantomblog@gmail.com>
 Date: Sun, 13 Aug 2023 00:47:56 +0000
-Subject: [PATCH 2/2] Nuke apns calls
+Subject: [PATCH 2/2] Nuke apns again
 
 ---
  target/product/aosp_product.mk        | 7 -------

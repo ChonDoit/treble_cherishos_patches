@@ -4,9 +4,33 @@ Date: Thu, 10 Aug 2023 01:45:58 +0000
 Subject: [PATCH] Make corners padding overridable with persist.sys.phh.rounded_corners_padding
 
 ---
+ .../src/com/android/systemui/shade/ShadeHeaderController.kt  | 5 ++++-
  .../statusbar/phone/StatusBarContentInsetsProvider.kt        | 5 ++++-
- 1 files changed, 4 insertions(+), 1 deletions(-)
+ 2 files changed, 8 insertions(+), 2 deletions(-)
 
+diff --git a/packages/SystemUI/src/com/android/systemui/shade/ShadeHeaderController.kt b/packages/SystemUI/src/com/android/systemui/shade/ShadeHeaderController.kt
+index 8617c561dc68..17c3def37e78 100644
+--- a/packages/SystemUI/src/com/android/systemui/shade/ShadeHeaderController.kt
++++ b/packages/SystemUI/src/com/android/systemui/shade/ShadeHeaderController.kt
+@@ -29,6 +29,7 @@ import android.content.ContentUris
+ import android.icu.util.Calendar
+ import android.net.Uri
+ import android.os.Bundle
++import android.os.SystemProperties
+ import android.os.Trace
+ import android.os.Trace.TRACE_TAG_APP
+ import android.provider.AlarmClock
+@@ -504,7 +505,9 @@ constructor(
+     }
+ 
+     private fun updateResources() {
+-        roundedCorners = resources.getDimensionPixelSize(R.dimen.rounded_corner_content_padding)
++        roundedCorners = SystemProperties.getInt("persist.sys.phh.rounded_corners_padding", -1);
++        if(roundedCorners == -1)
++            roundedCorners = resources.getDimensionPixelSize(R.dimen.rounded_corner_content_padding)
+         val padding = resources.getDimensionPixelSize(R.dimen.qs_panel_padding)
+         header.setPadding(padding, header.paddingTop, padding, header.paddingBottom)
+         updateQQSPaddings()
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarContentInsetsProvider.kt b/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarContentInsetsProvider.kt
 index c850d4f9c56b..4ee02eea4b9e 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/StatusBarContentInsetsProvider.kt

@@ -1,2 +1,6 @@
+A13-v20230824
+| Sync with source
+| Bring back Theme Picker
+
 A13-v20230813
 | Sync with August Sources
